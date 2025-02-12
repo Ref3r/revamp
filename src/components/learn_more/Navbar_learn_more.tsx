@@ -3,95 +3,134 @@
 import React from 'react'
 import Image from 'next/image'
 import { Button } from "@lemonsqueezy/wedges";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 import { ChevronsRight } from "lucide-react";
 import Link from 'next/link';
 
 const Navbar_learn_more = () => {
-    const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
+  const navLinks = [
+    { href: "/", label: "Whitepaper" },
+    { href: "/", label: "Feature" },
+    { href: "/", label: "FAQ" },
+    { href: "/", label: "Blog" },
+  ];
+
   return (
-    <div>
-      <nav className="bg-[#0E0E0E] py-4 px-6 md:px-12 flex justify-between items-center">
-      {/* Logo (Left Side) */}
-      <div className="logo">
-        <Image src="/logo.svg" alt="Logo" width={104} height={40.7} />
-      </div>
+    <>
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
 
-      {/* Navigation Links (Centered) */}
-      <div className="hidden md:flex justify-center items-center flex-1">
-        <ul className="flex items-center space-x-10 text-white text-[15px] font-normal">
-          <li className="animation">
-            <Link href="/">Whitepaper</Link>
-          </li>
-          <li className="animation">
-            <Link href="/">Feauture</Link>
-          </li>
-          <li className="animation">
-            <Link href="/">FAQ</Link>
-          </li>
-          <li className="animation">
-            <Link href="/">Blog</Link>
-          </li>
-        </ul>
-      </div>
-
-      {/* Buttons (Right Side) */}
-      <div className="hidden md:flex space-x-4">
-        <Button className="border text-white rounded-full w-[95px] h-[48px] font-medium">
-          <Link href="/">Log In</Link>
-        </Button>
-       <Button className="bg-white text-[#0E0E0E] rounded-full w-[175px] h-[49px] font-medium flex justify-center items-center">
-          <Link href="/" className="flex items-center gap-2">
-            <span>Get Started</span>
-            <ChevronsRight className="w-6 h-6 text-[#0E0E0E]" />
+      <nav className="fixed top-0 left-0 right-0 bg-[#0E0E0E] py-5 px-4 sm:px-6 lg:px-12 flex justify-between items-center z-40">
+        {/* Logo */}
+        <div className="relative z-40">
+          <Link href="/">
+            <Image 
+              src="/logo.svg" 
+              alt="Logo" 
+              width={104} 
+              height={41} 
+              className="w-20 sm:w-24 lg:w-28"
+            />
           </Link>
-       </Button>
-      </div>
+        </div>
 
-      {/* Hamburger Menu (Mobile) */}
-      <div className="md:hidden">
-        <button onClick={() => setIsOpen(!isOpen)}>
-          {isOpen ? <X size={28} color="white" /> : <Menu size={28} color="white" />}
-        </button>
-      </div>
+        {/* Desktop Navigation Links */}
+        <div className="hidden lg:flex justify-center items-center flex-1">
+          <ul className="flex items-center space-x-8 xl:space-x-10 text-white">
+            {navLinks.map((link, index) => (
+              <li key={index} className="group">
+                <Link 
+                  href={link.href}
+                  className="text-base font-normal hover:text-gray-300 transition-colors relative outline-none"
+                >
+                  {link.label}
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-white transition-all duration-300 group-hover:w-full"/>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
 
-      {/* Mobile Menu (Opens when isOpen is true) */}
-      <div
-        className={`absolute top-[70px] left-0 w-full bg-[#0E0E0E] md:hidden transition-all duration-300 ease-in-out ${
-          isOpen ? "block" : "hidden"
-        }`}
-      >
-        <ul className="flex flex-col items-center space-y-6 text-white text-[15px] font-normal mt-4">
-          <li className="animation">
-            <Link href="/">Whitepaper</Link>
-          </li>
-          <li className="animation">
-            <Link href="/">Feauture</Link>
-          </li>
-          <li className="animation">
-            <Link href="/">FAQ</Link>
-          </li>
-           <li className="animation">
-            <Link href="/">Blog</Link>
-          </li>       
-        </ul>
-
-        {/* Buttons (Side by Side in Mobile Menu) */}
-        <div className="flex justify-center items-center gap-4 mt-6">
-          <Button className="border text-white rounded-full w-[95px] h-[48px] font-medium">
+        {/* Desktop Buttons */}
+        <div className="hidden lg:flex items-center space-x-4">
+          <Button className="text-white rounded-full px-6 py-2 hover:bg-white/10 transition-colors border-none outline-none focus:outline-none focus:ring-0">
             <Link href="/">Log In</Link>
           </Button>
-          <Button className="bg-white text-[#0E0E0E] rounded-full w-[175px] h-[49px] font-medium flex justify-center items-center">
-          <Link href="/" className="flex items-center gap-2">
-            <span>Get Started</span>
-            <ChevronsRight className="w-6 h-6 text-[#0E0E0E]" />
-          </Link>
-       </Button>
+          <Button className="bg-white text-black rounded-full px-6 py-2 hover:bg-gray-100 transition-colors border-none outline-none focus:outline-none focus:ring-0">
+            <Link href="/" className="flex items-center gap-2">
+              <span>Get Started</span>
+              <ChevronsRight className="w-5 h-5" />
+            </Link>
+          </Button>
         </div>
-      </div>
-    </nav>
-    </div>
+
+        {/* Mobile Menu Button */}
+        <button 
+          onClick={() => setIsOpen(!isOpen)}
+          className="lg:hidden z-50 p-2 hover:bg-white/10 rounded-full transition-colors border-none outline-none focus:outline-none focus:ring-0"
+          aria-label="Toggle menu"
+        >
+          {isOpen ? <X size={24} color="white" /> : <Menu size={24} color="white" />}
+        </button>
+
+        {/* Mobile Menu */}
+        <div className={`
+          fixed top-0 right-0 h-screen w-4/5 max-w-sm bg-[#0E0E0E] shadow-lg
+          transform transition-transform duration-300 ease-in-out z-40
+          lg:hidden
+          ${isOpen ? 'translate-x-0' : 'translate-x-full'}
+        `}>
+          <div className="flex flex-col h-full pt-20 px-6">
+            <ul className="space-y-6 text-white">
+              {navLinks.map((link, index) => (
+                <li key={index}>
+                  <Link 
+                    href={link.href}
+                    className="text-lg font-normal hover:text-gray-300 transition-colors outline-none"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+
+            <div className="flex flex-col space-y-4 mt-8">
+              <Button className="text-white rounded-full px-6 py-3 hover:bg-white/10 transition-colors w-full border-none outline-none focus:outline-none focus:ring-0">
+                <Link href="/">Log In</Link>
+              </Button>
+              <Button className="bg-white text-black rounded-full px-6 py-3 hover:bg-gray-100 transition-colors w-full border-none outline-none focus:outline-none focus:ring-0">
+                <Link href="/" className="flex items-center justify-center gap-2">
+                  <span>Get Started</span>
+                  <ChevronsRight className="w-5 h-5" />
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Spacer for fixed navbar */}
+      <div className="h-16 sm:h-20" />
+    </>
   )
 }
 
