@@ -1,12 +1,11 @@
 import React from 'react'
 import Image from 'next/image'
-import { Button } from "@lemonsqueezy/wedges";
-import Link from 'next/link';
+
 
 const Second_section = () => {
   return (
     
-    <div className='bg-[#0E0E0E] min-h-screen flex flex-col items-center px-4 sm:px-6 lg:px-8'>
+    <div  id="Second_section" className='bg-[#0E0E0E] min-h-screen flex flex-col items-center px-4 sm:px-6 lg:px-8'>
       <h1 className='text-white font-bold text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-center py-6 sm:py-8 lg:py-10'>
         All the tools required for social<br className='hidden sm:block' /> media growth in one place
       </h1>
