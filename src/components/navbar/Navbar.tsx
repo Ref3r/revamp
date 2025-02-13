@@ -7,10 +7,13 @@ import Link from 'next/link';
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { ChevronsRight } from "lucide-react";
+import { useRouter } from 'next/navigation';
+import JoinWaitlistButton from '../join-waitlist/JoinWaitlistButton';
 
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
   return (
     <div>
       <nav className="bg-[#0E0E0E] py-4 px-6 md:px-12 flex justify-between items-center">
@@ -21,30 +24,38 @@ const Navbar = () => {
 
       {/* Navigation Links (Centered) */}
       <div className="hidden md:flex justify-center items-center flex-1">
-        <ul className="flex items-center space-x-10 text-white text-[15px] font-normal">
-          <li className="animation">
-            <Link href="/">Home</Link>
-          </li>
-          <li className="animation">
-          <Link href="/homepage">Learn More</Link>
-          </li>
-          <li className="animation">
-          <Link href="/">Blog</Link>
-          </li>
-        </ul>
-      </div>
+  <ul className="flex items-center space-x-10 text-white text-[15px] font-normal">
+    <li className="animation">
+      <Link href="/">Home</Link>
+    </li>
+    <li className="animation">
+      <Link href="/homepage">Learn More</Link>
+    </li>
+    <li className="animation">
+      <Link href="https://medium.com/@kishenmaran06/collaborative-marketing-the-new-era-of-modern-marketing-57ac2b1843f7" target="_blank" rel="noopener noreferrer">
+        Blog
+      </Link>
+    </li>
+  </ul>
+</div>
+
 
       {/* Buttons (Right Side) */}
       <div className="hidden md:flex space-x-4">
-        <Button className="border text-white rounded-full w-[95px] h-[48px] font-medium">
-          <Link href="/">Log In</Link>
+        {/* <Button className="border text-white rounded-full w-[95px] h-[48px] font-medium"
+         onClick={() => router.push("/sign-up")}
+        >
+          Log In
         </Button>
        <Button className="bg-white text-[#0E0E0E] rounded-full w-[175px] h-[49px] font-medium flex justify-center items-center">
           <Link href="/" className="flex items-center gap-2">
             <span>Get Started</span>
             <ChevronsRight className="w-6 h-6 text-[#0E0E0E]" />
           </Link>
-       </Button>
+       </Button> */}
+
+
+<JoinWaitlistButton />
       </div>
 
       {/* Hamburger Menu (Mobile) */}
@@ -67,22 +78,25 @@ const Navbar = () => {
           <li className="animation">
             <Link href="/homepage">Learn More</Link>
           </li>
-          <li className="animation">
-            <Link href="/">Blog</Link>
-          </li>
+          <Link href="https://medium.com/@kishenmaran06/collaborative-marketing-the-new-era-of-modern-marketing-57ac2b1843f7" target="_blank" rel="noopener noreferrer">
+        Blog
+      </Link>
         </ul>
 
         {/* Buttons (Side by Side in Mobile Menu) */}
         <div className="flex justify-center items-center gap-4 mt-6">
-          <Button className="border text-white rounded-full w-[95px] h-[48px] font-medium">
-            <Link href="/">Log In</Link>
+          {/* <Button className="border text-white rounded-full w-[95px] h-[48px] font-medium"
+           onClick={() => router.push("/sign-up")}
+          >
+            Log In
           </Button>
           <Button className="bg-white text-[#0E0E0E] rounded-full w-[175px] h-[49px] font-medium flex justify-center items-center">
           <Link href="/" className="flex items-center gap-2">
             <span>Get Started</span>
             <ChevronsRight className="w-6 h-6 text-[#0E0E0E]" />
           </Link>
-       </Button>
+       </Button> */}
+         <JoinWaitlistButton />
         </div>
       </div>
     </nav>
