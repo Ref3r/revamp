@@ -1,10 +1,8 @@
 'use client';
-import { useState } from 'react';
+
 import React from 'react'
 import Image from 'next/image'
-import Link from 'next/link'
-import { Button } from '@lemonsqueezy/wedges';
-import { ChevronDown } from 'lucide-react';
+
 import {
   Accordion,
   AccordionContent,
@@ -40,7 +38,7 @@ const Sixth_section = () => {
   ];
 
   return (
-    <div className={LAYOUT_STYLES.section}>
+    <div  id="Sixth_section" className={LAYOUT_STYLES.section}>
     <div className={LAYOUT_STYLES.container + " py-16 md:py-24"}>
       <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
         <div className="lg:w-1/3">

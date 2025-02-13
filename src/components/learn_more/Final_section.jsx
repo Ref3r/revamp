@@ -15,8 +15,8 @@ const Final_section = () => {
   return (
     <div className='bg-[#0E0E0E] px-4 sm:px-6 md:px-8 lg:px-24 py-8 sm:py-12 lg:py-20'>
       <div className='max-w-[1540px] mx-auto'>
-        <div className='flex flex-col lg:flex-row gap-12 lg:gap-24'>
-          <div className='flex flex-col items-center lg:items-start'>
+        <div className='flex flex-col lg:flex-row gap-12 lg:gap-96 '>
+          <div className='flex flex-col items-center lg:items-start '>
             <Image 
               src="/logo.svg" 
               width={100} 
