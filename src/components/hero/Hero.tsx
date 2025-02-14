@@ -29,8 +29,8 @@ const Hero = () => {
             </Link>
           </Button>
         <Image
-          src="/vector.svg"
-          alt="/"
+          src="/Vector.svg"
+          alt="Doddle"
           width={280}
           height={180}
           className=" md:ml-0 mt-6 md:mt-3"
