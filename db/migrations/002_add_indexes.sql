@@ -1,0 +1,1 @@
+CREATE INDEX idx_waitlist_joined_at ON waitlist(joined_at);

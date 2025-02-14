@@ -1,4 +1,5 @@
 "use client";
+import { joinWaitlist } from "@/functions/waitlist";
 import React, { useState } from "react";
 
 interface JoinWaitlistPopProps {
@@ -33,6 +34,10 @@ const JoinWaitlistPop = ({ isOpen, togglePopup }: JoinWaitlistPopProps) => {
             />
             <button
               type="submit"
+              onClick={() => joinWaitlist(email).then(() => {
+                togglePopup();
+                setEmail("");
+              })}
               className="text-black hover:text-white bg-white hover:bg-black py-1 md:py-2 rounded-lg md:rounded-xl w-[60%] md:w-[25%] text-sm md:text-lg font-medium md:font-semibold"
             >
               Join Waitlist
