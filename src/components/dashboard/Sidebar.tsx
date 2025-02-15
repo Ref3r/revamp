@@ -2,15 +2,7 @@ import React from 'react'
 import Link from 'next/link'
 import { Button } from '@lemonsqueezy/wedges'
 import Image from 'next/image'
-import Profile_box from './Profile_box'
-import Homefeed from './Home-feed'
-import Communities from './Communities'
-import Engagementrate from './Engagement-rate'
-import Partnership from './Partnership'
-import Recentcontests from './Recent-contests'
-import Post from './Post'
-import Post2 from './Post-2'
-import Dashboardmenue from './Dashboard-menue'
+
 
 
 const Sidebar = () => {
@@ -43,18 +35,7 @@ const Sidebar = () => {
           <Link href="#"><Image src="/profile-photo.svg" width={36} height={36} alt='/' /></Link>
         </div>
       </div>
-      <main>
-        <Profile_box />
-        <Homefeed />
-        <Communities />
-        <Engagementrate />
-        <Partnership />
-        <Recentcontests />
-        <Post />
-        <Post2 />
-        <Dashboardmenue/>
-        
-      </main>
+    
 </div>
   )
 }

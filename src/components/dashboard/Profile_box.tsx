@@ -9,7 +9,7 @@ const Profile_box = () => {
           
           {/* main div */}
 
-        <div className='flex items-center bg-[#1A1919] h-[120px] w-[345px] rounded-[20px] px-2'>
+        <div className='flex items-center bg-[#1A1919] h-[120px] w-[345px] rounded-[20px]'>
               <div className='ml-2 mr-3'>
                   <Image src="/profile-photo.svg" width={140} height={140} alt="#" />
               </div>  
