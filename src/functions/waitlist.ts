@@ -28,13 +28,22 @@ export async function joinWaitlist(email: string) {
 
     const emailResponse = await resend.emails.send({
       to: email,
-      from: "ref3r.official@gmail.com", // Replace with verified domain
-      subject: "Welcome to the waitlist!",
-      text: `You're #${position[0].position} in line. We'll notify you when it's your turn.`,
+      from: `Ref3r <waitlist@onboarding.ref3r.com>`,
+      subject: "You're on Ref3r's Waitlist! 🎨",
+      // text: `You're #${position[0].position} in line. We'll notify you when it's your turn.`,
       html: `
-        <h1>You're on the list!</h1>
-        <p>You're #${position[0].position} in line. We'll notify you when it's your turn.</p>
+      <h1>Hi ${email.split("@")[0]},</h1>
+
+      <p>Thanks for joining Ref3r's waitlist! We're building the ultimate platform for creators and businesses to connect, collaborate, and grow together.</p>
+      <p>We'll notify you as soon as we're ready to welcome you in.</p>
+
+      <p>Stay creative!</p>
+      <p>The Ref3r Team</p>
+
+      <p>P.S. Have questions? Just reply to this email.</p>
       `
+
+
     });
 
     console.log(emailResponse);
