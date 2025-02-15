@@ -1,30 +1,41 @@
-'use client';
-import { useState } from 'react';
-import { ChevronDown } from 'lucide-react';
-import ProgressBarComponent from '../ProgressBar/ProgressBar';
-import SocialConnect from '@/components/ProfileCreation/SocialConnect/SocilaConnect';
-import InstagramTemplates from '@/components/ProfileCreation/SocialTemplates/Templates';
-import CommunityList from '@/components/ProfileCreation/SocialTribes/SocilaTribes';
-import { Button, Input, Label, Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue, Textarea } from '@lemonsqueezy/wedges';
-import ProfileCreationLoader from '../loader/ProfileCreationLoader'; // Import loader
+"use client";
+import { useState } from "react";
+import { ChevronDown } from "lucide-react";
+import ProgressBarComponent from "../ProgressBar/ProgressBar";
+import SocialConnect from "@/components/ProfileCreation/SocialConnect/SocilaConnect";
+import InstagramTemplates from "@/components/ProfileCreation/SocialTemplates/Templates";
+import CommunityList from "@/components/ProfileCreation/SocialTribes/SocilaTribes";
+import {
+  Button,
+  Input,
+  Label,
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Textarea,
+} from "@lemonsqueezy/wedges";
+import ProfileCreationLoader from "../loader/ProfileCreationLoader";
 
 export default function CreateProfile() {
   const [step, setStep] = useState(1);
   const [progress, setProgress] = useState(10);
-  const [isLoading, setIsLoading] = useState(false); // New loading state
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
-    bio: '',
-    website: '',
+    name: "",
+    bio: "",
+    website: "",
     niche: [] as string[],
     profilePicture: null as File | null,
   });
 
   const stepTitles = [
-    'Create your profile',
-    'Bring your socials to Ref3r',
-    'Select templates for your Socials',
-    'Follow your tribe',
+    "Create your profile",
+    "Bring your socials to Ref3r",
+    "Select templates for your Socials",
+    "Follow your tribe",
   ];
 
   const handleNext = () => {
@@ -44,10 +55,8 @@ export default function CreateProfile() {
           break;
       }
     } else if (step === 4) {
-      // Log formData at the final step
-      console.log('Form Data:', formData);
+      console.log("Form Data:", formData);
 
-      // After completing step 4, trigger the loader
       setIsLoading(true);
     }
   };
@@ -77,7 +86,7 @@ export default function CreateProfile() {
       const file = target.files[0];
       setFormData({ ...formData, profilePicture: file });
 
-      console.log('Selected File:', {
+      console.log("Selected File:", {
         name: file.name,
         type: file.type,
         size: file.size,
@@ -87,7 +96,6 @@ export default function CreateProfile() {
 
   const renderStepContent = () => {
     if (isLoading) {
-      // Render only ProfileCreationLoader when isLoading is true
       return <ProfileCreationLoader />;
     }
 
@@ -96,7 +104,9 @@ export default function CreateProfile() {
         return (
           <div className="max-w-md mx-auto space-y-8">
             <div className="mb-12">
-              <h2 className="text-[#FFFFFF] text-base mb-4 text-left">Upload your PFP</h2>
+              <h2 className="text-[#FFFFFF] text-base mb-4 text-left">
+                Upload your PFP
+              </h2>
               <div className="flex items-center gap-6">
                 <div className="relative w-32 h-32">
                   <Input
@@ -109,7 +119,9 @@ export default function CreateProfile() {
                   />
                   <div
                     className="absolute inset-0 rounded-full border border-dashed border-[#333333] flex items-center justify-center flex-col cursor-pointer bg-[#111111] hover:bg-[#1a1a1a] transition-colors"
-                    onClick={() => document.getElementById('fileInput')?.click()}
+                    onClick={() =>
+                      document.getElementById("fileInput")?.click()
+                    }
                   >
                     {formData.profilePicture ? (
                       <img
@@ -118,7 +130,9 @@ export default function CreateProfile() {
                         className="rounded-full w-full h-full object-cover"
                       />
                     ) : (
-                      <span className="text-[#4D4D4D] text-sm text-center">PNGs, JPGs</span>
+                      <span className="text-[#4D4D4D] text-sm text-center">
+                        PNGs, JPGs
+                      </span>
                     )}
                   </div>
                 </div>
@@ -126,7 +140,7 @@ export default function CreateProfile() {
                 <Button
                   variant="outline"
                   className="bg-white text-black hover:bg-gray-100 rounded-lg px-6 py-2 text-sm border-0"
-                  onClick={() => document.getElementById('fileInput')?.click()}
+                  onClick={() => document.getElementById("fileInput")?.click()}
                 >
                   Select Image
                 </Button>
@@ -135,54 +149,92 @@ export default function CreateProfile() {
 
             <div className="space-y-6 text-left">
               <div>
-                <Label htmlFor="name" className="text-[#FFFFFF] mb-2 block">Name</Label>
+                <Label htmlFor="name" className="text-[#FFFFFF] mb-2 block">
+                  Name
+                </Label>
                 <Input
                   required
                   type="text"
                   id="name"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: (e.target as HTMLInputElement).value })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      name: (e.target as HTMLInputElement).value,
+                    })
+                  }
                   placeholder="John Doe"
                   className="w-full bg-[#111111] border border-[#333333] text-white py-3 px-4 rounded-lg focus:ring-[#0BA360] focus:border-[#0BA360]"
                 />
               </div>
 
               <div>
-                <Label htmlFor="bio" className="text-[#FFFFFF] mb-2 block">Your Bio</Label>
+                <Label htmlFor="bio" className="text-[#FFFFFF] mb-2 block">
+                  Your Bio
+                </Label>
                 <Textarea
                   required
                   id="bio"
                   value={formData.bio}
-                  onChange={(e) => setFormData({ ...formData, bio: (e.target as HTMLInputElement).value })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      bio: (e.target as HTMLInputElement).value,
+                    })
+                  }
                   placeholder="Write some interesting stuff about you"
                   className="w-full bg-[#111111] border border-[#333333] text-white py-3 px-4 rounded-lg min-h-[120px] resize-none focus:ring-[#0BA360] focus:border-[#0BA360]"
                 />
               </div>
 
               <div>
-                <Label htmlFor="website" className="text-[#FFFFFF] mb-2 block">Website URL</Label>
+                <Label htmlFor="website" className="text-[#FFFFFF] mb-2 block">
+                  Website URL
+                </Label>
                 <Input
                   required
                   type="text"
                   id="website"
                   value={formData.website}
-                  onChange={(e) => setFormData({ ...formData, website: (e.target as HTMLInputElement).value })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      website: (e.target as HTMLInputElement).value,
+                    })
+                  }
                   placeholder="http://www.example.com"
                   className="w-full bg-[#111111] border border-[#333333] text-white py-3 px-4 rounded-lg focus:ring-[#0BA360] focus:border-[#0BA360]"
                 />
               </div>
 
               <div>
-                <Label htmlFor="niche" className="text-[#FFFFFF] mb-2 block">Your niche</Label>
-                <Select onValueChange={(value) => setFormData({ ...formData, niche: [value] })}>
+                <Label htmlFor="niche" className="text-[#FFFFFF] mb-2 block">
+                  Your niche
+                </Label>
+                <Select
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, niche: [value] })
+                  }
+                >
                   <SelectTrigger className="w-full py-3 px-4 bg-[#111111] border border-[#333333] text-[#FFFFFF] rounded-lg flex justify-between items-center">
                     <SelectValue placeholder="Select" />
                     <ChevronDown className="h-5 w-5" />
                   </SelectTrigger>
                   <SelectContent className="bg-[#1E1E1E] border border-[#333333] rounded-lg text-white">
                     <SelectGroup>
-                      {['Travel', 'Finance', 'Web3/crypto', 'Education', 'Tech', 'Blogging'].map((item) => (
-                        <SelectItem key={item} value={item} className="text-white">
+                      {[
+                        "Travel",
+                        "Finance",
+                        "Web3/crypto",
+                        "Education",
+                        "Tech",
+                        "Blogging",
+                      ].map((item) => (
+                        <SelectItem
+                          key={item}
+                          value={item}
+                          className="text-white"
+                        >
                           {item}
                         </SelectItem>
                       ))}
@@ -211,7 +263,9 @@ export default function CreateProfile() {
       ) : (
         <div className="w-full max-w-6xl mx-auto px-4 py-8">
           <div className="text-center mb-8">
-            <h1 className="text-[#FFFFFF] text-4xl font-semibold mb-6">{stepTitles[step - 1]}</h1>
+            <h1 className="text-[#FFFFFF] text-4xl font-semibold mb-6">
+              {stepTitles[step - 1]}
+            </h1>
             <ProgressBarComponent progress={progress} />
           </div>
 
@@ -227,10 +281,10 @@ export default function CreateProfile() {
 
             {step > 1 && (
               <Button
-                className="w-full bg-[#333333] hover:bg-[#4D4D4D] text-white py-3 rounded-lg"
+                className="w-full bg-[#262626] hover:bg-[#4D4D4D] text-white py-3 rounded-lg"
                 onClick={handleBack}
               >
-                Back
+                Go Back
               </Button>
             )}
           </div>
