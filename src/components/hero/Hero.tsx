@@ -22,12 +22,12 @@ const Hero = () => {
         <p className="text-[16px] md:text-[21px] font-normal text-[#D1D1D1] mt-4 md:ml-[77px]">
           Your all-in-one destination to showcase your work, grow your network, and<br/> discover game-changing opportunities.
         </p>
-        <Button className="rounded-full border-none bg-gradient-to-r from-[#0BA360] to-[#27A980] w-[180px] md:w-[217px] h-[50px] md:h-[57px] mt-6 md:ml-[77px]  flex justify-center mx-auto">
+        {/* <Button className="rounded-full border-none bg-gradient-to-r from-[#0BA360] to-[#27A980] w-[180px] md:w-[217px] h-[50px] md:h-[57px] mt-6 md:ml-[77px]  flex justify-center mx-auto">
             <Link href="#" className='flex items-center gap-2'>
               <span>Start for Free!</span>
               <ChevronsRight className="w-6 h-6 text-[#D1D1D1]" />
             </Link>
-          </Button>
+          </Button> */}
         <Image
           src="/Vector.svg"
           alt="Doddle"
