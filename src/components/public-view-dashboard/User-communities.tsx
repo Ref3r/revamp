@@ -5,8 +5,8 @@ import { Button } from '@lemonsqueezy/wedges'
 
 const Usercommunities = () => {
   return (
-    <div className='bg-[#0E0E0E]  absolute top-[550px] left-[990px]'>
-        <div className='bg-[#1A1919] h-full w-[290px] rounded-[20px] px-4  flex flex-col'>
+    <div className='bg-[#0E0E0E]  absolute top-[990px] left-80 md:left-4 md:top-[390px] xl:top-[550px] xl:left-[990px]'>
+        <div className='bg-[#1A1919] h-full w-[290px] lg:max-xl:w-[400px]  rounded-[20px] px-4  flex flex-col'>
             <div>
                <h1 className='text-[#FFFFFF7A] font-medium text-base py-2'>Parry's Communities</h1>   
             </div> 

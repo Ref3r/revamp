@@ -8,7 +8,7 @@ import Engagementchart from "@/components/public-view-dashboard/Engagement-chart
 
 const Page = () => {
   return (
-    <div className="bg-[#0E0E0E] min-h-screen">
+    <div className="bg-[#0E0E0E] h-[1160px] md:h-[1100px] lg:h-[780px] xl:h-[725px]">
       <Profile />
       <Recentpartners />
       <Usercommunities />

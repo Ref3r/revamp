@@ -4,7 +4,7 @@ import { Button } from '@lemonsqueezy/wedges'
 import Link from 'next/link'
 const Work = () => {
   return (
-    <div className='bg-[#1A1919]  absolute top-4 left-[700px] h-[525px] w-[580px] rounded-[20px] flex flex-col px-8 py-3'>
+    <div className='bg-[#1A1919]  absolute top-[450px] left-7 h-[525px] w-[580px] xl:top-4 xl:left-[700px] xl:h-[525px] xl:w-[580px] md:top-[560px] lg:top-[230px] lg:left-[430px] rounded-[20px] flex flex-col px-8 py-3'>
         <div>
             <h1 className='font-medium text-base text-[#FFFFFF7A] '>Work</h1>  
           </div>

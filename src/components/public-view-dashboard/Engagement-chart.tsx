@@ -33,8 +33,8 @@ const Engagementchart = () => {
         },
       } satisfies ChartConfig
   return (
-    <div className="bg-[#0E0E0E]  absolute top-[470px] left-[205px]">
-      <div className="flex flex-col bg-[#1A1919] h-[240px] w-[480px] rounded-[20px] py-1">
+    <div className="bg-[#0E0E0E]  absolute md:left-[320px] top-[230px] left-[325px] lg:top-2 lg:left-[710px] xl:top-[470px] xl:left-[205px]">
+      <div className="flex flex-col bg-[#1A1919] h-[200px] w-[300px] md:max-lg:h-[320px] md:max-lg:w-[480px] xl:h-[240px] xl:w-[480px] rounded-[20px] py-1">
         <div className="flex justify-between items-center">
           <h1 className="font-medium text-xs text-[#FFFFFF] px-4 ">
             Engagement Rate
@@ -53,7 +53,7 @@ const Engagementchart = () => {
             </div>
           </div>
         </div>
-        <div className='flex justify-center items-center'>
+        <div className='flex justify-center items-center md:max-lg:pt-10'>
                   <Card className='w-[400px]'>
                     <CardContent className=''>
                       <ChartContainer config={chartConfig}>

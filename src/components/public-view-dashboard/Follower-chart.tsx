@@ -35,8 +35,8 @@ const Followerchart = () => {
     },
   } satisfies ChartConfig
   return (
-    <div className='bg-[#0E0E0E]  absolute top-56 left-[205px]'>
-      <div className='flex flex-col bg-[#1A1919] h-[240px] w-[480px] rounded-[20px] py-1'>
+    <div className='bg-[#0E0E0E]  absolute md:top-4 md:left-[500px]  lg:top-2 xl:top-56 xl:left-[205px] lg:left-[400px] top-[230px] left-4'>
+      <div className='flex flex-col bg-[#1A1919] h-[200px] w-[300px] md:w-[300px] xl:h-[240px] xl:w-[480px] rounded-[20px] py-1'>
         <div className='flex justify-between items-center'>
           <h1 className='font-medium text-sm text-[#FFFFFF] px-4'>Total Aggregated Followers</h1>
           <div className='flex  justify-center items-center'>

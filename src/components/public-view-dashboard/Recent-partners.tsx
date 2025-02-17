@@ -3,8 +3,8 @@ import Image from 'next/image'
 
 const Recentpartners = () => {
   return (
-    <div className='bg-[#0E0E0E]  absolute top-[550px] left-[700px]'>
-          <div className='bg-[#1A1919] h-full w-[270px] rounded-[20px] px-4  flex flex-col'>
+    <div className='bg-[#0E0E0E]  absolute top-[990px] left-7 md:left-4 md:top-[230px] xl:top-[550px] xl:left-[700px]'>
+          <div className='bg-[#1A1919] h-full w-[270px] md:max-lg:w-[290px] lg:max-xl:w-[400px] rounded-[20px] px-4  flex flex-col'>
                 <div>
                    <h1 className='text-[#FFFFFF7A] font-medium text-base py-3'>Recent Partnerships</h1>   
                 </div> 
