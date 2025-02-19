@@ -1,9 +1,12 @@
+import { use } from "react";
+
 export default function SuccessPage({
   searchParams,
 }: {
-  searchParams: { email?: string };
+  searchParams: Promise<{ email?: string }>;
 }) {
-  const email = searchParams.email;
+  const params = use(searchParams)
+  const email = params.email;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#0E0E0E] text-white">
