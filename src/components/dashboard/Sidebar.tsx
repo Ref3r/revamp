@@ -7,7 +7,7 @@ import Image from 'next/image'
 
 const Sidebar = () => {
   return (
-    <div className='bg-[#0E0E0E] h-[1500px]  '>
+    <div className='bg-[#0E0E0E] h-screen  '>
       <div className='flex flex-col justify-between items-center bg-[#1A1919] w-[55px] h-[700px] rounded-[20px] ml-[29px] '>
       <div className='pt-[35px]'>
         <Image src="/r-logo.svg" width={30} height={20} alt='/' />
