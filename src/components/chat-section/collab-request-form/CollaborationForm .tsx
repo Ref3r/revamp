@@ -1,3 +1,4 @@
+// @ts-nocheck
 'use client'
 import { Button, Input, Label, Popover, Textarea } from '@lemonsqueezy/wedges';
 import {

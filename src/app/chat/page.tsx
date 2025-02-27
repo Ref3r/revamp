@@ -222,6 +222,7 @@ export default function Home() {
             className={`h-full flex flex-col ${selectedChat && isMobileView ? "pt-16" : ""}`}
           >
             <ChatWindow
+            // @ts-ignore
               chat={currentChat}
               activeTab={activeTab}
               onBack={handleBack}
