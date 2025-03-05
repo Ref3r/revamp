@@ -17,7 +17,7 @@ const Hero = () => {
           className="mx-auto md:ml-[650px]"
         />
         <h1 className="font-extrabold text-[36px] md:text-[64px] leading-tight mt-4 md:ml-[77px]">
-          Elevate your Creator<br/> Journey
+          Elevate your <span className='bg-gradient-to-r from-[#0BA360] via-[#27A980] to-[#0BA360] text-transparent bg-clip-text'>Creator</span><br/> Journey
         </h1>
         <p className="text-[16px] md:text-[21px] font-normal text-[#D1D1D1] mt-4 md:ml-[77px]">
           Your all-in-one destination to showcase your work, grow your network, and<br/> discover game-changing opportunities.
