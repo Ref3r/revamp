@@ -1,7 +1,7 @@
 'use client'
 import React from "react";
 import Sidebar from "@/components/dashboard/Sidebar";
-import Profile_box from "@/components/dashboard/Profile_box";
+import Profile_box from "@/components/dashboard/ProfileBox";
 import Homefeed from "@/components/dashboard/Home-feed";
 import Communities from "@/components/dashboard/Communities";
 import Engagementrate from "@/components/dashboard/Engagement-rate";
@@ -11,6 +11,7 @@ import Post2 from "@/components/dashboard/Post-2";
 import WalletBalance from "@/components/dashboard/WalletBalance";
 import RecentContests from "@/components/dashboard/RecentContests";
 import DashboardMenu from "@/components/dashboard/DashboardMenu";
+import ProfileBox from "@/components/dashboard/ProfileBox";
 
 const Dashboard = () => {
   return (
@@ -78,7 +79,7 @@ const Dashboard = () => {
           
           {/* Mobile Components - Now hidden on all screen sizes */}
           <div className="hidden">
-            <Profile_box />
+            <ProfileBox />
             <Engagementrate />
             <Partnership />
             <Communities />

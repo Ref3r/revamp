@@ -51,7 +51,7 @@ const CollaborationForm = () => {
         type="text"
         id="brandName"
         value={brandName}
-        onChange={(e) => setBrandName(e.target.value)}
+        onChange={(e) => setBrandName((e.target as HTMLInputElement).value)}
         className="w-full p-2 bg-transparent border border-[#FFFFFF33] rounded-lg outline-none focus:ring-2 focus:ring-[#FFFFFF33]"
         placeholder="Twitter community"
       />
@@ -63,7 +63,7 @@ const CollaborationForm = () => {
       <Textarea 
         id="brandDescription"
         value={brandDescription}
-        onChange={(e) => setBrandDescription(e.target.value)}
+        onChange={(e) => setBrandDescription((e.target as HTMLTextAreaElement).value)}
         className="w-full p-2 bg-transparent border border-[#FFFFFF33] rounded-lg outline-none focus:ring-2 focus:ring-[#FFFFFF33]"
         rows={3}
         placeholder="Write some interesting shit about your brand"
@@ -76,7 +76,7 @@ const CollaborationForm = () => {
       <Textarea 
         id="collaborationRequest"
         value={collaborationRequest}
-        onChange={(e) => setCollaborationRequest(e.target.value)}
+        onChange={(e) => setCollaborationRequest((e.target as HTMLTextAreaElement).value)}
         className="w-full p-2 bg-transparent border border-[#FFFFFF33] rounded-lg outline-none focus:ring-2 focus:ring-[#FFFFFF33]"
         rows={3}
         placeholder="Write some interesting shit about why they should work with you"
@@ -159,7 +159,7 @@ const CollaborationForm = () => {
           <Input
             type="number"
             value={price}
-            onChange={(e) => setPrice(e.target.value)}
+            onChange={(e) => setPrice((e.target as HTMLInputElement).value)}
             className="w-full pl-10 p-2.5 bg-transparent border border-gray-600 rounded-lg text-white outline-none focus:ring-2 focus:ring-gray-400"
             placeholder="0.00"
             style={{ paddingLeft: '2.5rem' }}

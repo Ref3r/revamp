@@ -3,7 +3,7 @@
 import React from 'react'
 import { ChevronUp } from 'lucide-react'
 import { TrendingUp } from "lucide-react"
-import { CartesianGrid, Line, LineChart, XAxis } from "recharts"
+import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts"
 import {
   Card,
   CardContent,
@@ -22,12 +22,14 @@ import {
 
 const Followeranalytics = () => {
   const chartData = [
-    { month: "June", desktop: 86 },
-    { month: "July", desktop: 105 },
-    { month: "August", desktop: 337 },
-    { month: "September", desktop: 23 },
-    { month: "October", desktop: 209 },
+    { month: "June", desktop: 12000 },
+    { month: "July", desktop: 28000 },
+    { month: "August", desktop: 38000 },
+    { month: "September", desktop: 22000 },
+    { month: "October", desktop: 14000 },
   ]
+
+  const yAxisTicks = [0, 10000, 20000, 30000, 40000, 50000];
   const chartConfig = {
     desktop: {
       label: "Followers",
@@ -62,7 +64,13 @@ const Followeranalytics = () => {
                     top: 50,
                   }}
                 >
-                  <CartesianGrid vertical={false} />
+
+                  <CartesianGrid 
+                              horizontal={true} 
+                              vertical={false} 
+                              stroke="#333" 
+                              strokeDasharray="3 3" 
+                            />
                   <XAxis
                     dataKey="month"
                     tickLine={false}
@@ -74,6 +82,19 @@ const Followeranalytics = () => {
                     cursor={false}
                     content={<ChartTooltipContent hideLabel />}
                   />
+
+                   <YAxis 
+                                axisLine={false} 
+                                tickLine={false} 
+                                tick={{ fill: '#666', fontSize: 12 }}
+                                width={40}
+                                tickFormatter={(value) => {
+                                  if (value === 0) return '0';
+                                  return `${value / 10000}0K`;
+                                }}
+                                ticks={yAxisTicks}
+                                domain={[0, 50000]}
+                              />
                   <Line 
                     dataKey="desktop"
                     type="natural"

@@ -1,11 +1,15 @@
 'use client'
-import { Button } from '@lemonsqueezy/wedges'
 import React from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
 
 const WalletBalance = () => {
   const router = useRouter();
+  
+  const handlePublicView = () => {
+    router.push('/public-view-dashboard');
+  };
+  
   return (
     <div className='bg-[#0E0E0E] w-full py-3 sm:py-4'>
       <div className='bg-[#1A1919] rounded-[20px] w-full'>
@@ -19,12 +23,11 @@ const WalletBalance = () => {
             </p>
           </div>
           <div>
-            <Button className='bg-[#FFFFFF1A] rounded-full h-7 sm:h-8 text-white text-xs sm:text-sm px-3 sm:px-5 py-1 sm:py-2'
-            onClick={() => router.push('/public-view-dashboard')}>
-            
-            
-                Public View
-            
+            <Button 
+              className='bg-[#FFFFFF1A] hover:bg-[#FFFFFF33] rounded-full h-7 sm:h-8 text-white text-xs sm:text-sm px-3 sm:px-5 py-1 sm:py-2'
+              onClick={handlePublicView}
+            >
+              Public View
             </Button>
           </div>
         </div>
