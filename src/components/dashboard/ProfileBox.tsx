@@ -54,8 +54,8 @@ const ProfileBox = ({ isPublicView = false }) => {
                   onClick={toggleForm}
                 />
                 <div
-                  className={`fixed top-0 right-0 z-50 h-full w-[370px] bg-[#0E0E0E] shadow-lg transition-transform transform ${
-                    showForm ? 'translate-x-0' : 'translate-x-full'
+                  className={`fixed top-0 right-0 z-50 h-full w-[370px] bg-[#0E0E0E] shadow-lg transition-transform duration-1000 ease-in-out transform ${
+                    showForm ? 'translate-x-0 delay-500' : 'translate-x-full'
                   } overflow-y-auto`}
                   style={{ maxHeight: '100vh' }}
                 >
@@ -117,8 +117,8 @@ const ProfileBox = ({ isPublicView = false }) => {
                   onClick={toggleForm}
                 />
                 <div
-                  className={`fixed top-0 right-0 z-50 h-full w-[510px] bg-[#0E0E0E] shadow-lg transition-transform transform ${
-                    showForm ? 'translate-x-0' : 'translate-x-full'
+                  className={`fixed top-0 right-0 z-50 h-full w-[510px] bg-[#0E0E0E] shadow-lg transition-transform duration-500 ease-in-out transform ${
+                    showForm ? 'translate-x-0 delay-1000' : 'translate-x-full'
                   } overflow-y-auto`}
                   style={{ maxHeight: '100vh' }}
                 >

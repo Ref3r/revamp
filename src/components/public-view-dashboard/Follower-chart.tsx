@@ -4,7 +4,11 @@ import React from 'react'
 import { ChevronUp } from 'lucide-react'
 import { CartesianGrid, Line, LineChart, XAxis, YAxis, ResponsiveContainer } from "recharts"
 
-const FollowerCharts = () => {
+interface FollowerChartsProps {
+  className?: string;
+}
+
+const FollowerCharts: React.FC<FollowerChartsProps> = ({ className }) => {
   const chartData = [
     { month: "Jun", value: 12000 },
     { month: "Jul", value: 28000 },
@@ -28,7 +32,7 @@ const FollowerCharts = () => {
   };
   
   return (
-    <div className='bg-[#1A1919] rounded-2xl p-6'>
+    <div className={`bg-[#1A1919] rounded-2xl p-6 ${className}`}>
       <div className='flex justify-between items-center mb-2'>
         <h1 className='font-medium text-sm text-[#FFFFFF7A]'>Total Aggregated Followers</h1>
         <div className='flex justify-center items-center'>
