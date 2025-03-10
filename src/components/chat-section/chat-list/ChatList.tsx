@@ -27,7 +27,7 @@ export default function ChatList({
   setActiveTab,
 }: ChatListProps) {
   return (
-    <div className="h-full bg-[#111110] border-r border-gray-800/50 w-full max-w-[28rem]">
+    <div className="h-full bg-[#1A191933] border-r border-[#28282800] w-full max-w-[28rem]">
       <div className="flex flex-col h-full">
         {/* Header Section */}
         <div className="p-3 sm:p-4 lg:p-6 space-y-4">
@@ -44,9 +44,10 @@ export default function ChatList({
               className={`
                 px-4 py-2 rounded-full text-sm transition-all duration-200
                 flex items-center justify-center min-w-[5rem]
-                ${activeTab === "general"
-                  ? "bg-gray-800 text-white"
-                  : "text-gray-400 hover:bg-gray-800/50"
+                ${
+                  activeTab === "general"
+                    ? "bg-[#292928] text-white"
+                    : "text-gray-400  border-2 border-[#414140] "
                 }
               `}
             >
@@ -57,9 +58,10 @@ export default function ChatList({
               className={`
                 px-4 py-2 rounded-full text-sm transition-all duration-200
                 flex items-center justify-center min-w-[5rem]
-                ${activeTab === "collaborations"
-                  ? "bg-gray-800 text-white"
-                  : "text-gray-400 hover:bg-gray-800/50"
+                ${
+                  activeTab === "collaborations"
+                    ? "bg-[#292928] text-white"
+                    : "text-gray-400  border-2 border-[#414140]"
                 }
               `}
             >
@@ -77,9 +79,10 @@ export default function ChatList({
                 className={`
                   w-full flex items-center gap-3 p-3 rounded-xl
                   transition-all duration-200 outline-none
-                  ${selectedChat === chat.id
-                    ? "bg-gray-800/50"
-                    : "hover:bg-gray-800/30"
+                  ${
+                    selectedChat === chat.id
+                      ? "bg-[#DBDBDB0A]"
+                      : "hover:bg-[#DBDBDB0A]/50"
                   }
                 `}
                 onClick={() => onSelectChat(chat.id)}
