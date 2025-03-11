@@ -28,7 +28,7 @@ const CollaborationForm = ({ isFromChat = false }: CollaborationFormProps) => {
 
   const collabTypes = [
     { value: "sponsored-post", label: "Sponsored Post" },
-    { value: "affiliate-marketing", label: "Affiliate Marketing" },
+    { value: "affiliate-marketing", label: "Affiliate Marketing" }, 
     { value: "product-review", label: "Product Review" },
     { value: "brand-ambassador", label: "Brand Ambassador" },
     { value: "content-creation", label: "Content Creation" },
