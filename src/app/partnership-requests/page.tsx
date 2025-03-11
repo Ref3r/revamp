@@ -4,10 +4,15 @@ import Requests from "@/components/partnership-requests/Requests";
 
 const page = () => {
   return (
-    <div className="bg-[#0E0E0E] min-h-screen p-4">
+    <div className="bg-[#0E0E0E] min-h-screen">
       {/* Fixed Sidebar */}
-      <div className="fixed left-3 top-0 bottom-0 z-30 hidden lg:block">
+      <div className="fixed left-4 top-0 bottom-0 z-30 hidden lg:block">
         <Sidebar />
+      </div>
+
+      {/* Main Content Container */}
+      <div className="w-full pt-4 lg:pl-16 overflow-x-hidden">
+        <Requests />
       </div>
 
       {/* Mobile Bottom Navigation */}
@@ -15,8 +20,7 @@ const page = () => {
         <div className="flex justify-around items-center px-2">
           <Sidebar isMobile={true} />
         </div>
-          </div>
-          <Requests/>
+      </div>
     </div>
   );
 };

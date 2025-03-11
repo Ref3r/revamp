@@ -1,16 +1,36 @@
 import Sidebar from '@/components/dashboard/Sidebar'
-import Brandcollabchart from '@/components/partnerships/brand-collab/Brand-collab-chart'
+import Brandcollabchart from '@/components/partnerships/brand-collab/BrandCollabChart'
 import Campaign from '@/components/partnerships/campaign/Campaign'
 import Earnings from '@/components/partnerships/earnings/Earnings'
-import Partnershipsheader from '@/components/partnerships/header/Partnerships-header'
+import PartnershipsHeader from '@/components/partnerships/header/PartnershipsHeader'
 import React from 'react'
 
-const page = () => {
+const Page = () => {
   return (
-    <div className='bg-[#0E0E0E] h-[1000px] p-4'>
+    <div className='bg-[#0E0E0E] min-h-screen'>
       {/* Fixed Sidebar */}
       <div className="fixed left-3 top-0 bottom-0 z-30 hidden lg:block">
         <Sidebar />
+      </div>
+
+      {/* Main Content */}
+      <div className="lg:ml-[70px] relative">
+        <PartnershipsHeader />
+        
+        {/* Charts Row */}
+        <div className="flex flex-col md:flex-row gap-4 px-4 mt-4">
+          <div className="w-full md:w-1/2">
+            <Earnings />
+          </div>
+          <div className="w-full md:w-1/2">
+            <Brandcollabchart />
+          </div>
+        </div>
+        
+        {/* Campaign Section */}
+        <div className="px-4 mt-8">
+          <Campaign />
+        </div>
       </div>
 
       {/* Mobile Bottom Navigation */}
@@ -19,12 +39,8 @@ const page = () => {
           <Sidebar isMobile={true} />
         </div>
       </div>
-      <Partnershipsheader />
-      <Brandcollabchart />
-      <Earnings />
-      <Campaign/>
     </div>
   )
 }
 
-export default page
+export default Page

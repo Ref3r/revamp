@@ -1,9 +1,10 @@
+import FollowerCharts from '@/components/public-view-dashboard/Follower-chart'
 import React from 'react'
 
 const Earnings = () => {
   return (
-    <div className="bg-[#1A191933] rounded-[15px] absolute top-24 left-[780px] flex flex-col">
-      
+    <div className="bg-[#1A191933] rounded-[15px] h-full w-full">
+      <FollowerCharts className="w-full" />
     </div>
   )
 }
