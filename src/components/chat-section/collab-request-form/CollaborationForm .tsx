@@ -11,24 +11,28 @@ import {
 } from "@lemonsqueezy/wedges";
 import { Calendar } from "@/components/ui/calendar";
 import { useState } from "react";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, X } from "lucide-react";
 
 interface CollaborationFormProps {
-  isFromChat?: boolean; // Flag to determine if opened from chat window
+  isFromChat?: boolean;
+  onClose?: () => void;
 }
 
-const CollaborationForm = ({ isFromChat = false }: CollaborationFormProps) => {
+const CollaborationForm = ({
+  isFromChat = false,
+  onClose,
+}: CollaborationFormProps) => {
   const [brandName, setBrandName] = useState("");
   const [brandDescription, setBrandDescription] = useState("");
   const [collaborationRequest, setCollaborationRequest] = useState("");
   const [price, setPrice] = useState("");
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false); // Calendar open state
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const collabTypes = [
     { value: "sponsored-post", label: "Sponsored Post" },
-    { value: "affiliate-marketing", label: "Affiliate Marketing" }, 
+    { value: "affiliate-marketing", label: "Affiliate Marketing" },
     { value: "product-review", label: "Product Review" },
     { value: "brand-ambassador", label: "Brand Ambassador" },
     { value: "content-creation", label: "Content Creation" },
@@ -37,84 +41,83 @@ const CollaborationForm = ({ isFromChat = false }: CollaborationFormProps) => {
 
   const toggleSelection = (value: string) => {
     setSelectedTypes(
-      (prevSelected) =>
-        prevSelected.includes(value)
-          ? prevSelected.filter((item) => item !== value) // Remove if already selected
-          : [...prevSelected, value] // Add if not selected
+      selectedTypes.includes(value)
+        ? selectedTypes.filter((item) => item !== value)
+        : [...selectedTypes, value]
     );
   };
 
-  // Dynamic heading based on where the form is opened from
   const formHeading = isFromChat
     ? "Send the Proposal"
     : "Send a Collaboration Request";
 
   return (
     <div className="bg-[#0E0E0E] text-[#FFFFFF] p-0 max-w-lg mx-auto rounded-lg shadow-md backdrop-blur-sm">
-      {/* Remove the heading here since it's now handled in the parent component */}
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-semibold text-white">{formHeading}</h2>
+        {onClose && (
+          <button onClick={onClose} className="text-white hover:text-gray-300">
+            <X size={20} />
+          </button>
+        )}
+      </div>
 
-      {/* Brand Name Input */}
-      <Label className="block text-sm mb-2" htmlFor="brandName">
-        Brand Name
-      </Label>
-      <Input
-        type="text"
-        id="brandName"
-        value={brandName}
-        onChange={(e) => setBrandName((e.target as HTMLInputElement).value)}
-        className="w-full p-2 bg-transparent border border-[#FFFFFF33] rounded-lg outline-none focus:ring-2 focus:ring-[#FFFFFF33]"
-        placeholder="Twitter community"
-      />
+      <div className="mb-4">
+        <Label className="block text-sm mb-2" htmlFor="brandName">
+          Brand Name
+        </Label>
+        <Input
+          type="text"
+          id="brandName"
+          value={brandName}
+          onChange={(e) => setBrandName((e.target as HTMLInputElement).value)}
+          className="w-full p-2 bg-transparent border border-[#FFFFFF33] rounded-lg outline-none focus:ring-2 focus:ring-[#FFFFFF33]"
+          placeholder="Twitter community"
+        />
+      </div>
 
-      {/* Brand Description Input */}
-      <Label className="block text-sm mt-4 mb-2" htmlFor="brandDescription">
-        Brand Description
-      </Label>
-      <Textarea
-        id="brandDescription"
-        value={brandDescription}
-        onChange={(e) =>
-          setBrandDescription((e.target as HTMLTextAreaElement).value)
-        }
-        className="w-full p-2 bg-transparent border border-[#FFFFFF33] rounded-lg outline-none focus:ring-2 focus:ring-[#FFFFFF33]"
-        rows={3}
-        placeholder="Write some interesting shit about your brand"
-      />
+      <div className="mb-4">
+        <Label className="block text-sm mb-2" htmlFor="brandDescription">
+          Brand Description
+        </Label>
+        <Textarea
+          id="brandDescription"
+          value={brandDescription}
+          onChange={(e) =>
+            setBrandDescription((e.target as HTMLTextAreaElement).value)
+          }
+          className="w-full p-2 bg-transparent border border-[#FFFFFF33] rounded-lg outline-none focus:ring-2 focus:ring-[#FFFFFF33]"
+          rows={3}
+          placeholder="Write some interesting shit about your brand"
+        />
+      </div>
 
-      {/* Collaboration Request Input */}
-      <Label className="block text-sm mt-4 mb-2" htmlFor="collaborationRequest">
-        Collaboration Request
-      </Label>
-      <Textarea
-        id="collaborationRequest"
-        value={collaborationRequest}
-        onChange={(e) =>
-          setCollaborationRequest((e.target as HTMLTextAreaElement).value)
-        }
-        className="w-full p-2 bg-transparent border border-[#FFFFFF33] rounded-lg outline-none focus:ring-2 focus:ring-[#FFFFFF33]"
-        rows={3}
-        placeholder="Write some interesting shit about why they should work with you"
-      />
+      <div className="mb-4">
+        <Label className="block text-sm mb-2" htmlFor="collaborationRequest">
+          Collaboration Request
+        </Label>
+        <Textarea
+          id="collaborationRequest"
+          value={collaborationRequest}
+          onChange={(e) =>
+            setCollaborationRequest((e.target as HTMLTextAreaElement).value)
+          }
+          className="w-full p-2 bg-transparent border border-[#FFFFFF33] rounded-lg outline-none focus:ring-2 focus:ring-[#FFFFFF33]"
+          rows={3}
+          placeholder="Write some interesting shit about why they should work with you"
+        />
+      </div>
 
-      {/* Collab Type Dropdown */}
-      <div>
-        <Label className="block text-sm mt-4 mb-2">Select Collab Types</Label>
+      <div className="mb-4">
+        <Label className="block text-sm mb-2">Select Collab Types</Label>
         <Select
           value={selectedTypes[0] || ""}
           onValueChange={(value) => toggleSelection(value)}
         >
           <SelectTrigger className="w-full p-2 bg-transparent border border-[#FFFFFF33] rounded-lg outline-none focus:ring-2 focus:ring-[#FFFFFF33] text-white group">
-            {/* Display selected values or placeholder */}
             {selectedTypes.length > 0 ? (
               <div className="flex flex-wrap gap-1">
-                {selectedTypes.map((type) => (
-                  <span
-                    key={type}
-                    className="bg-[#333333] px-2 py-1 rounded-full text-sm"
-                  >
-                    {collabTypes.find((t) => t.value === type)?.label}
-                  </span>
-                ))}
+                {selectedTypes.length} selected
               </div>
             ) : (
               <SelectValue placeholder="Select..." />
@@ -149,7 +152,7 @@ const CollaborationForm = ({ isFromChat = false }: CollaborationFormProps) => {
                       toggleSelection(type.value);
                     }}
                   >
-                    <input
+                    <Input
                       type="checkbox"
                       checked={selectedTypes.includes(type.value)}
                       onChange={() => toggleSelection(type.value)}
@@ -164,63 +167,58 @@ const CollaborationForm = ({ isFromChat = false }: CollaborationFormProps) => {
         </Select>
       </div>
 
-      {/* Price Input */}
-      <Label className="block text-sm mt-4 mb-2">Price</Label>
-      <div className="flex items-center w-full space-x-2">
+      <div className="mb-4">
+        <Label className="block text-sm mb-2">Price</Label>
         <div className="relative w-full">
-          {/* Dollar sign positioned inside the input */}
           <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
             $
           </span>
-          <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pr-5">
-            USD
-          </span>
-
-          {/* Input field */}
           <Input
             type="number"
             value={price}
             onChange={(e) => setPrice((e.target as HTMLInputElement).value)}
-            className="w-full pl-10 p-2.5 bg-transparent border border-gray-600 rounded-lg text-white outline-none focus:ring-2 focus:ring-gray-400"
+            className="w-full pl-8 pr-16 p-2.5 bg-transparent border border-[#FFFFFF33] rounded-lg text-white outline-none focus:ring-2 focus:ring-[#FFFFFF33]"
             placeholder="0.00"
-            style={{ paddingLeft: "2.5rem" }}
           />
+          <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+            USD
+          </span>
         </div>
       </div>
 
-      {/* Deadline Input */}
-      <Label className="block text-sm mt-4 mb-2">Set a deadline</Label>
-      <div className="relative w-full">
-        <Input
-          type="text"
-          value={date?.toLocaleDateString()}
-          readOnly
-          className="w-full p-2 pl-4 bg-transparent border border-[#FFFFFF33] rounded-lg outline-none focus:ring-2 focus:ring-[#FFFFFF33]"
-        />
-        <button
-          className="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 bg-transparent border-none text-white focus:outline-none"
-          onClick={() => setIsCalendarOpen(!isCalendarOpen)}
-        >
-          <CalendarIcon className="w-6 h-6" />
-        </button>
+      <div className="mb-6">
+        <Label className="block text-sm mb-2">Set a deadline</Label>
+        <div className="relative w-full">
+          <Input
+            type="text"
+            value={date?.toLocaleDateString()}
+            readOnly
+            className="w-full p-2 pl-4 bg-transparent border border-[#FFFFFF33] rounded-lg outline-none focus:ring-2 focus:ring-[#FFFFFF33]"
+          />
+          <button
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 bg-transparent border-none text-white focus:outline-none"
+            onClick={() => setIsCalendarOpen(!isCalendarOpen)}
+          >
+            <CalendarIcon className="w-5 h-5" />
+          </button>
 
-        {/* Calendar Component */}
-        {isCalendarOpen && (
-          <div className="absolute  bottom-full mb-2 bg-[#1E1E1E] border border-[#FFFFFF33] rounded-md shadow-lg z-10 w-full max-w-[250px]">
-            <Calendar
-              mode="single"
-              selected={date}
-              onSelect={(selectedDate) => {
-                setDate(selectedDate);
-                setIsCalendarOpen(false);
-              }}
-            />
-          </div>
-        )}
+          {isCalendarOpen && (
+            <div className="absolute bottom-full mb-2 bg-[#1E1E1E] border border-[#FFFFFF33] rounded-md shadow-lg z-10 w-full max-w-[250px] right-0">
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={(selectedDate) => {
+                  setDate(selectedDate);
+                  setIsCalendarOpen(false);
+                }}
+              />
+            </div>
+          )}
+        </div>
       </div>
 
       <Button
-        className="mt-6 w-full p-3 bg-gradient-to-r from-[#0BA360] to-[#27A980]  text-white rounded-lg shadow-lg hover:bg-gradient-to-r hover:from-[#27A980] hover:to-[#0BA360] transition duration-300 ease-in-out"
+        className="w-full p-3 bg-gradient-to-r from-[#0BA360] to-[#27A980] text-white rounded-lg shadow-lg hover:bg-gradient-to-r hover:from-[#27A980] hover:to-[#0BA360] transition duration-300 ease-in-out"
         onClick={() => alert("Collaboration Request Sent")}
       >
         Send that request!

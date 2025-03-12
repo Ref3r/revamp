@@ -17,19 +17,19 @@ const navItems = [
     component: <LayoutGrid size={20} />,
   },
   {
-    href: "/chat",
+    href: "/communities",
     icon: "/users.svg",
     alt: "Users",
     component: <Users size={20} />,
   },
   {
-    href: "#",
+    href: "/chat",
     icon: "/message-circle.svg",
     alt: "Messages",
     component: <MessageCircle size={20} />,
   },
   {
-    href: "#",
+    href: "/partnerships",
     icon: "/heart-handshake.svg",
     alt: "Partnerships",
     component: <HeartHandshake size={20} />,

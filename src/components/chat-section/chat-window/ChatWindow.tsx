@@ -9,9 +9,11 @@ import {
   ArrowLeft,
   Mic,
   X,
+  Award,
 } from "lucide-react";
 import { Button, Input } from "@lemonsqueezy/wedges";
 import CollaborationForm from "../collab-request-form/CollaborationForm ";
+import Form from "@/components/communities/community-challenge-form/Form"; // Update this path to match your Form component location
 
 interface Message {
   id: number;
@@ -35,6 +37,7 @@ interface ChatWindowProps {
   chat: Chat | undefined;
   activeTab: string;
   onBack: () => void;
+  onChatUpdate: (updatedChat: Chat) => void;
 }
 
 export default function ChatWindow({
@@ -45,11 +48,33 @@ export default function ChatWindow({
   const [chat, setChat] = useState<Chat | undefined>(initialChat);
   const [newMessage, setNewMessage] = useState("");
   const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messageEndRef = useRef<HTMLDivElement>(null);
   const [showForm, setShowForm] = useState(false);
+  const [showAwardForm, setShowAwardForm] = useState(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    // Check if it's a mobile device
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    // Initial check
+    checkIfMobile();
+
+    // Add event listener for window resize
+    window.addEventListener("resize", checkIfMobile);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener("resize", checkIfMobile);
+    };
+  }, []);
 
   useEffect(() => {
     setChat(initialChat);
@@ -58,6 +83,35 @@ export default function ChatWindow({
   useEffect(() => {
     messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chat?.messages]);
+
+  // Recording timer effect
+  useEffect(() => {
+    if (isRecording) {
+      timerRef.current = setInterval(() => {
+        setRecordingTime((prevTime) => prevTime + 1);
+      }, 1000);
+    } else {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        setRecordingTime(0);
+      }
+    }
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, [isRecording]);
+
+  // Format recording time to MM:SS
+  const formatTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes.toString().padStart(2, "0")}:${remainingSeconds
+      .toString()
+      .padStart(2, "0")}`;
+  };
 
   if (!chat) {
     return (
@@ -211,16 +265,46 @@ export default function ChatWindow({
 
   const toggleForm = () => {
     setShowForm(!showForm);
+    if (!showForm) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
+    }
+  };
+
+  const toggleAwardForm = () => {
+    setShowAwardForm(!showAwardForm);
+    if (!showAwardForm) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
+    }
   };
 
   return (
-    <div className="flex-1 bg-[#0E0E0E] flex flex-col h-[100dvh] md:h-full relative">
+    <div className="flex-1 bg-[#0E0E0E] flex flex-col h-screen md:h-full relative">
+      {/* Add these styles to your global CSS or inline styles here */}
+      <style jsx global>{`
+        @keyframes slideIn {
+          from {
+            transform: translateX(100%);
+          }
+          to {
+            transform: translateX(0);
+          }
+        }
+
+        .animate-slide-in {
+          animation: slideIn 0.3s ease-out forwards;
+        }
+      `}</style>
+
       {/* Header */}
-      <div className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 border-b border-gray-800/50 backdrop-blur-sm bg-[#0E0E0E]/80 sticky top-0 z-10">
+      <div className="px-2 sm:px-4 lg:px-6 py-2 sm:py-4 backdrop-blur-sm bg-[#0E0E0E]/80 sticky top-0 z-10">
         <div className="flex items-center gap-2 sm:gap-4">
           <button
             onClick={onBack}
-            className="md:hidden p-1.5 sm:p-2 hover:bg-white/10 rounded-lg transition-colors"
+            className="p-1.5 sm:p-2 hover:bg-white/10 rounded-lg transition-colors"
             aria-label="Go back"
           >
             <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -246,7 +330,7 @@ export default function ChatWindow({
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-2 sm:px-4 lg:px-6 py-3 sm:py-6 space-y-4 sm:space-y-6">
+      <div className="flex-1 overflow-y-auto px-2 sm:px-4 lg:px-6 py-3 sm:py-6 space-y-4 sm:space-y-6 mb-[60px] md:mb-0">
         {chat.messages?.map((message) => (
           <div
             key={message.id}
@@ -334,6 +418,7 @@ export default function ChatWindow({
         ))}
         <div ref={messageEndRef} />
       </div>
+
       {(selectedImage || selectedFile) && (
         <div className="px-2 sm:px-4 lg:px-6 py-2 border-t border-gray-800/50">
           <div className="flex items-center bg-gray-800/30 rounded-lg p-2">
@@ -395,7 +480,12 @@ export default function ChatWindow({
         onChange={handleFileChange}
       />
 
-      <div className="p-2 sm:p-4 sticky bottom-0">
+      {/* Input area - Fixed at bottom on mobile */}
+      <div
+        className={`${
+          isMobile ? "fixed bottom-0 left-0 right-0 z-20" : "sticky bottom-0"
+        } bg-[#0E0E0E] p-2 sm:p-4`}
+      >
         <div className="flex items-center justify-between bg-[#1A1A1A] rounded-full px-3 py-2">
           <Button
             onClick={() => handleFileUpload("image")}
@@ -407,24 +497,46 @@ export default function ChatWindow({
 
           <Button
             onClick={handleVoiceRecording}
-            className={`p-2 hover:bg-gray-800/50 rounded-full transition-colors ${
+            className={`p-2 hover:bg-gray-800/50 rounded-full transition-colors flex items-center space-x-1 ${
               isRecording ? "text-red-500" : ""
             }`}
             aria-label={
               isRecording ? "Stop recording" : "Start voice recording"
             }
           >
-            <Mic className="w-5 h-5" />
+            {isRecording ? (
+              <>
+                <div className="w-5 h-5 flex items-center justify-center">
+                  <div className="w-3 h-3 bg-red-500 rounded-sm"></div>
+                </div>
+                <span className="text-xs text-white ml-1">
+                  {formatTime(recordingTime)}
+                </span>
+              </>
+            ) : (
+              <Mic className="w-5 h-5" />
+            )}
           </Button>
 
-          {activeTab === "collaborations" && (
+          {/* Show Award button for communities section, Dollar Sign for collaborations */}
+          {activeTab === "communities" ? (
             <Button
-              onClick={toggleForm}
+              onClick={toggleAwardForm}
               className="p-2 hover:bg-gray-800/50 rounded-full transition-colors"
-              aria-label="Payment options"
+              aria-label="Award"
             >
-              <DollarSign className="w-5 h-5 text-gray-400" />
+              <Award className="w-5 h-5 text-gray-400" />
             </Button>
+          ) : (
+            activeTab === "collaborations" && (
+              <Button
+                onClick={toggleForm}
+                className="p-2 hover:bg-gray-800/50 rounded-full transition-colors"
+                aria-label="Payment options"
+              >
+                <DollarSign className="w-5 h-5 text-gray-400" />
+              </Button>
+            )
           )}
 
           <div className="flex-1 mx-2">
@@ -451,23 +563,33 @@ export default function ChatWindow({
         </div>
       </div>
 
+      {/* Collaboration Form Slide-in Panel */}
       {showForm && (
-        <div className="fixed inset-0 z-[100]">
-          <div className="absolute inset-0 bg-black/50" onClick={toggleForm} />
-          <div className="absolute top-0 right-0 h-full w-full md:w-[510px] bg-[#0E0E0E] shadow-lg overflow-y-auto">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
-              <h2 className="text-lg font-semibold">Send the Proposal</h2>
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-end">
+          <div className="fixed top-0 right-0 h-full w-full md:w-[450px] bg-[#0E0E0E] shadow-lg overflow-y-auto animate-slide-in">
+            <div className="flex justify-between items-center p-4 pt-6" />
+            <div className="px-4 pb-6">
+              <CollaborationForm isFromChat={true} onClose={toggleForm} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Award Form Slide-in Panel */}
+      {showAwardForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-end">
+          <div className="fixed top-0 right-0 h-full w-full md:w-[450px] bg-[#0E0E0E] shadow-lg overflow-y-auto animate-slide-in">
+            <div className="flex justify-between items-center p-4 pt-6">
+              <h2 className="text-xl font-bold">Community Challenge</h2>
               <button
-                onClick={toggleForm}
-                className="p-1.5 rounded-full hover:bg-gray-800/50 transition-colors"
-                aria-label="Close form"
+                onClick={toggleAwardForm}
+                className="p-2 hover:bg-gray-800 rounded-full transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
-
-            <div className="p-4">
-              <CollaborationForm isFromChat={true} />
+            <div className="px-4 pb-6">
+              <Form isFromChat={true} onClose={toggleAwardForm} />
             </div>
           </div>
         </div>
