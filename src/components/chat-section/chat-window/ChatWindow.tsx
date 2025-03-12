@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { Button, Input } from "@lemonsqueezy/wedges";
 import CollaborationForm from "../collab-request-form/CollaborationForm ";
-import Form from "@/components/communities/community-challenge-form/Form"; // Update this path to match your Form component location
+import Form from "@/components/communities/community-challenge-form/Form"; 
 
 interface Message {
   id: number;
@@ -486,18 +486,18 @@ export default function ChatWindow({
           isMobile ? "fixed bottom-0 left-0 right-0 z-20" : "sticky bottom-0"
         } bg-[#0E0E0E] p-2 sm:p-4`}
       >
-        <div className="flex items-center justify-between bg-[#1A1A1A] rounded-full px-3 py-2">
+        <div className="flex items-center justify-between bg-[#282828] rounded-full px-3 py-2">
           <Button
             onClick={() => handleFileUpload("image")}
-            className="p-2 hover:bg-gray-800/50 rounded-full transition-colors"
+            className="p-2  rounded-full transition-colors bg-[#282828]"
             aria-label="Upload image"
           >
-            <ImageIcon className="w-5 h-5 text-gray-400" />
+            <ImageIcon className="w-5 h-5" />
           </Button>
 
           <Button
             onClick={handleVoiceRecording}
-            className={`p-2 hover:bg-gray-800/50 rounded-full transition-colors flex items-center space-x-1 ${
+            className={`p-2 bg-[#282828] rounded-full transition-colors flex items-center space-x-1 ${
               isRecording ? "text-red-500" : ""
             }`}
             aria-label={
@@ -522,7 +522,7 @@ export default function ChatWindow({
           {activeTab === "communities" ? (
             <Button
               onClick={toggleAwardForm}
-              className="p-2 hover:bg-gray-800/50 rounded-full transition-colors"
+              className="p-2 bg-[#282828]  rounded-full transition-colors"
               aria-label="Award"
             >
               <Award className="w-5 h-5 text-gray-400" />
@@ -531,7 +531,7 @@ export default function ChatWindow({
             activeTab === "collaborations" && (
               <Button
                 onClick={toggleForm}
-                className="p-2 hover:bg-gray-800/50 rounded-full transition-colors"
+                className="p-2 bg-[#282828]  rounded-full transition-colors"
                 aria-label="Payment options"
               >
                 <DollarSign className="w-5 h-5 text-gray-400" />
