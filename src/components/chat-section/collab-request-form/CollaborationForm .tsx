@@ -16,11 +16,22 @@ import { CalendarIcon, X } from "lucide-react";
 interface CollaborationFormProps {
   isFromChat?: boolean;
   onClose?: () => void;
+  onSubmit?: (formData: CollaborationFormData) => void;
+}
+
+export interface CollaborationFormData {
+  brandName: string;
+  brandDescription: string;
+  collaborationRequest: string;
+  price: string;
+  deadline: Date | undefined;
+  collaborationTypes: string[];
 }
 
 const CollaborationForm = ({
   isFromChat = false,
   onClose,
+  onSubmit,
 }: CollaborationFormProps) => {
   const [brandName, setBrandName] = useState("");
   const [brandDescription, setBrandDescription] = useState("");
@@ -50,6 +61,31 @@ const CollaborationForm = ({
   const formHeading = isFromChat
     ? "Send the Proposal"
     : "Send a Collaboration Request";
+
+  const handleSubmit = () => {
+    // Create form data object
+    const formData: CollaborationFormData = {
+      brandName,
+      brandDescription,
+      collaborationRequest,
+      price,
+      deadline: date,
+      collaborationTypes: selectedTypes,
+    };
+
+    // If onSubmit is provided, pass the form data
+    if (onSubmit) {
+      onSubmit(formData);
+    }
+
+    // Close the form if onClose is provided
+    if (onClose) {
+      onClose();
+    } else {
+      // Default alert if no callback is provided
+      alert("Collaboration Request Sent");
+    }
+  };
 
   return (
     <div className="bg-[#0E0E0E] text-[#FFFFFF] p-0 max-w-lg mx-auto rounded-lg shadow-md backdrop-blur-sm">
@@ -198,6 +234,7 @@ const CollaborationForm = ({
           <button
             className="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 bg-transparent border-none text-white focus:outline-none"
             onClick={() => setIsCalendarOpen(!isCalendarOpen)}
+            type="button"
           >
             <CalendarIcon className="w-5 h-5" />
           </button>
@@ -219,7 +256,7 @@ const CollaborationForm = ({
 
       <Button
         className="w-full p-3 bg-gradient-to-r from-[#0BA360] to-[#27A980] text-white rounded-lg shadow-lg hover:bg-gradient-to-r hover:from-[#27A980] hover:to-[#0BA360] transition duration-300 ease-in-out"
-        onClick={() => alert("Collaboration Request Sent")}
+        onClick={handleSubmit}
       >
         Send that request!
       </Button>
