@@ -312,6 +312,7 @@ export default function Home() {
         >
           <div className="h-full flex flex-col">
             <ChatWindow
+            // @ts-ignore
               chat={currentChat}
               activeTab={activeTab}
               onBack={handleBack}
