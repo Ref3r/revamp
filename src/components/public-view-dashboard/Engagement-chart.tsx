@@ -1,98 +1,99 @@
-'use client'
-import React from "react";
-import { ChevronDown } from "lucide-react";
-import { TrendingUp } from "lucide-react"
-import { CartesianGrid, Line, LineChart, XAxis } from "recharts"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import {
-  ChartConfig,
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart"
+"use client"
 
-const Engagementchart = () => {
-    const chartData = [
-        { month: "June", desktop: 86 },
-        { month: "July", desktop: 105 },
-        { month: "August", desktop: 337 },
-        { month: "September", desktop: 23 },
-        { month: "October", desktop: 209 },
-      ]
-      const chartConfig = {
-        desktop: {
-          label: "Engagement",
-          color: "#00C4C9",
-        },
-      } satisfies ChartConfig
+import React from "react"
+import { ChevronUp } from "lucide-react"
+import { CartesianGrid, Line, LineChart, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts"
+
+const EngagementChart = () => {
+  // Data points that match the engagement chart in the image
+  const chartData = [
+    { month: "Jun", value: 2 },
+    { month: "Jul", value: 3.5 },
+    { month: "Aug", value: 5 },
+    { month: "Sep", value: 3 },
+    { month: "Oct", value: 2.5 },
+  ]
+  
+  // Format Y-axis values for percentage
+  const formatYAxis = (value: number) => {
+    if (value === 0) return '0'
+    return `${value}%`
+  }
+  
+  // Custom tooltip component
+  const CustomTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-[#0E0E0E] px-2 py-1 rounded-md border border-gray-700 text-xs">
+          <p className="text-white">{`${payload[0].value}%`}</p>
+        </div>
+      );
+    }
+    return null;
+  };
+  
   return (
-    <div className="bg-[#0E0E0E]  absolute md:left-[320px] top-[230px] left-[325px] lg:top-2 lg:left-[710px] xl:top-[470px] xl:left-[205px]">
-      <div className="flex flex-col bg-[#1A1919] h-[200px] w-[300px] md:max-lg:h-[320px] md:max-lg:w-[480px] xl:h-[240px] xl:w-[480px] rounded-[20px] py-1">
-        <div className="flex justify-between items-center">
-          <h1 className="font-medium text-xs text-[#FFFFFF] px-4 ">
-            Engagement Rate
-          </h1>
-          <div className="flex  justify-center items-center">
-            <div>
-              <p className="font-medium text-[18px] text-[#FFFFFF]">
-                4.5%
-              </p>
-            </div>
-            <div className="flex items-center">
-              <ChevronDown className="h-3 w-3 text-[#FF3B30]" />
-              <span className="text-[12px] font-medium text-[#FF3B30] px-4">
-                -9%
-              </span>
-            </div>
+    <div className="bg-[#1A1919] rounded-2xl p-6">
+      <div className="flex justify-between items-center mb-2">
+        <h2 className="text-gray-300 text-sm">Average Engagement Rate</h2>
+        <div className="flex items-center">
+          <p className="text-white font-medium text-xl">5%</p>
+          <div className="flex items-center ml-2">
+            <ChevronUp className="h-3 w-3 text-[#0BA360]" />
+            <span className="text-xs font-medium text-[#0BA360]">+18%</span>
           </div>
         </div>
-        <div className='flex justify-center items-center md:max-lg:pt-10'>
-                  <Card className='w-[400px]'>
-                    <CardContent className=''>
-                      <ChartContainer config={chartConfig}>
-                        <LineChart
-                          accessibilityLayer
-                          data={chartData}
-                          margin={{
-                            left: 12,
-                            right: 12,
-                            top: 12,
-                          }}
-                        >
-                          <CartesianGrid vertical={false} />
-                          <XAxis
-                            dataKey="month"
-                            tickLine={false}
-                            axisLine={false}
-                            tickMargin={8}
-                            tickFormatter={(value) => value.slice(0, 3)}
-                          />
-                          <ChartTooltip
-                            cursor={false}
-                            content={<ChartTooltipContent hideLabel />}
-                          />
-                          <Line 
-                            dataKey="desktop"
-                            type="natural"
-                            stroke="#00C4C9"
-                            strokeWidth={4}
-                            dot={false}
-                          />
-                        </LineChart>
-                      </ChartContainer>
-                    </CardContent>
-                  </Card>
-                </div>
+      </div>
+      
+      <div className="h-[220px] w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart
+            data={chartData}
+            margin={{
+              top: 20,
+              right: 12,
+              left: 12,
+              bottom: 5,
+            }}
+          >
+            <CartesianGrid 
+              horizontal={true} 
+              vertical={false} 
+              stroke="#333" 
+              strokeDasharray="3 3" 
+            />
+            <XAxis 
+              dataKey="month" 
+              axisLine={false} 
+              tickLine={false} 
+              tick={{ fill: '#666', fontSize: 12 }}
+              dy={5}
+            />
+            <Tooltip 
+              content={<CustomTooltip />} 
+              cursor={false}
+            />
+            <YAxis 
+              axisLine={false} 
+              tickLine={false} 
+              tick={{ fill: '#666', fontSize: 12 }}
+              ticks={[0, 2, 4, 6, 8]}
+              tickFormatter={formatYAxis}
+              width={40}
+            />
+            <Line 
+              type="monotone" 
+              dataKey="value" 
+              stroke="#00C4C9" 
+              strokeWidth={4} 
+              dot={{ stroke: '#00C4C9', fill: '#00C4C9', strokeWidth: 4, r: 4 }} 
+              activeDot={{ fill: "#00C4C9", stroke: "#00C4C9", r: 5 }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Engagementchart;
+export default EngagementChart

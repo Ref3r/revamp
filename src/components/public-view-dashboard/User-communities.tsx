@@ -1,62 +1,58 @@
-import React from 'react'
-import Link from 'next/link'
-import Image from 'next/image'
-import { Button } from '@lemonsqueezy/wedges'
+import React from 'react';
+import Image from 'next/image';
+import { Button } from "@/components/ui/button";
 
-const Usercommunities = () => {
+const UserCommunities = () => {
+  const communities = [
+    {
+      id: 1,
+      name: 'Community 1',
+      members: '70+ Members',
+      iconSrc: '/community-1.svg'
+    },
+    {
+      id: 2,
+      name: 'Community 2', // Updated to match second image
+      members: '70+ Members',
+      iconSrc: '/community-2.svg'
+    }
+  ];
+
   return (
-    <div className='bg-[#0E0E0E]  absolute top-[990px] left-80 md:left-4 md:top-[390px] xl:top-[550px] xl:left-[990px]'>
-        <div className='bg-[#1A1919] h-full w-[290px] lg:max-xl:w-[400px]  rounded-[20px] px-4  flex flex-col'>
-            <div>
-               <h1 className='text-[#FFFFFF7A] font-medium text-base py-2'>Parry's Communities</h1>   
-            </div> 
-            <div className='flex flex-col'>
-                <div className='flex justify-between items-center pb-4'>
-                      <div className='flex items-center'>
-                          <div>
-                              <Image src="/community-1.svg" width={32} height={32} alt='#'/>
-                          </div>
-                          <div className='flex flex-col px-4'>
-                            <div>
-                                <h1 className='font-medium text-sm text-[#FFFFFF]'>Community 1</h1>
-                              </div>
-                              <div>
-                                  <p className='font-medium text-sm text-[#FFFFFF7A]'>70+ Members</p>
-                              </div>
-                          </div>
-                      </div>    
-                      <div>
-                          <Button className='bg-[#FFFFFF] h-7 flex justify-center items-center'>
-                              <Link href="#" className='text-black font-medium text-sm  px-5'>Join</Link>
-                          </Button>
-                      </div>       
-                </div> 
-                  <div className='pb-4'>
-                      <div className='flex justify-between items-center'>
-                      <div className='flex items-center'>
-                          <div>
-                              <Image src="/community-2.svg" width={32} height={32} alt='#'/>
-                          </div>
-                          <div className='flex flex-col px-4'>
-                              <div>
-                                <h1 className='font-medium text-sm text-[#FFFFFF]'>Community 1</h1>
-                              </div>
-                              <div>
-                                  <p className='font-medium text-sm text-[#FFFFFF7A]'>70+ Members</p>
-                              </div>
-                          </div>
-                      </div>    
-                      <div>
-                          <Button className='bg-[#FFFFFF] h-7 flex justify-center items-center'>
-                              <Link href="#" className='text-black font-medium text-sm  px-5'>Join</Link>
-                          </Button>
-                      </div>       
-                </div> 
-                  </div>  
-            </div>  
+    <div className="bg-[#1A1919] rounded-2xl p-4 h-full min-h-[160px]">
+      <h2 className="text-gray-300 text-base mb-4">Parry's Communities</h2>
+      
+      <div className="space-y-4">
+        {communities.map((community) => (
+          <div key={community.id} className="flex items-center justify-between">
+            <div className="flex items-center">
+              <div className="w-8 h-8 relative flex-shrink-0">
+                <Image 
+                  src={community.iconSrc} 
+                  alt={community.name} 
+                  width={32} 
+                  height={32} 
+                  className="rounded-full"
+                />
+              </div>
+              
+              <div className="ml-4">
+                <h3 className="text-white text-sm font-medium">{community.name}</h3>
+                <p className="text-gray-400 text-xs">{community.members}</p>
+              </div>
+            </div>
+            
+            <Button
+              variant="default"
+              className="bg-white text-black hover:bg-gray-200 h-8 px-4 text-sm rounded-md"
+            >
+              Join
+            </Button>
+          </div>
+        ))}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Usercommunities
+export default UserCommunities;

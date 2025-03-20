@@ -8,6 +8,22 @@ export default {
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
     
   ],
+
+	
+/* If using Tailwind, add this to your tailwind.config.js */
+/*
+extend: {
+  animation: {
+    'slide-in': 'slide-in 0.3s ease-out forwards',
+  },
+  keyframes: {
+    'slide-in': {
+      '0%': { transform: 'translateX(100%)' },
+      '100%': { transform: 'translateX(0)' },
+    },
+  },
+}
+*/
   theme: {
   	extend: {
   		colors: {
@@ -73,11 +89,16 @@ export default {
   				to: {
   					height: '0'
   				}
-  			}
+  			},
+				'slide-in': {
+      '0%': { transform: 'translateX(100%)' },
+      '100%': { transform: 'translateX(0)' },
+    }
   		},
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
-  			'accordion-up': 'accordion-up 0.2s ease-out'
+  			'accordion-up': 'accordion-up 0.2s ease-out',
+				'slide-in': 'slide-in 0.5s ease-out forwards',
   		}
   	}
   },
