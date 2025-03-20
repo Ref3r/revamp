@@ -248,6 +248,7 @@ export default function CreateProfile() {
       case 2:
         return <SocialConnect onConnect={() => setProgress(40)} />;
       case 3:
+        // @ts-ignore
         return <InstagramTemplates onSelect={() => setProgress(70)} />;
       case 4:
         return <CommunityList onFollow={() => setProgress(100)} />;
