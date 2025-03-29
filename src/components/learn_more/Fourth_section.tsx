@@ -37,7 +37,9 @@ const Fourth_section = () => {
               <ChevronsRight className="w-4 sm:w-5 md:w-6 h-4 sm:h-5 md:h-6 text-black" />
             </Link>
           </Button> */}
-          <JoinWaitlistButton/>
+          <div className="scale-150 px-7">
+            <JoinWaitlistButton/>
+          </div>
         </div>
 
       </div>

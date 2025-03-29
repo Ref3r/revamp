@@ -18,22 +18,22 @@ const Seventh_section = () => {
 
  
         <div className="mt-8 sm:mt-10 md:mt-12 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
-          <div className="w-full max-w-lg relative">
+            <div className="w-full max-w-lg relative ml-4 sm:ml-36">
             <Input 
               type="email" 
               placeholder="Enter your email" 
               className="w-full rounded-full bg-[#3D3D3D] text-white py-3 sm:py-4 md:py-5 px-4 sm:px-6 
-                        focus:outline-none focus:ring-2 focus:ring-white/20
-                        text-base sm:text-lg"
+                  focus:outline-none focus:ring-2 focus:ring-white/20
+                  text-base sm:text-lg"
             />
             <Button className="absolute right-2 top-1/2 transform -translate-y-1/2 
-                             bg-white text-black font-medium text-sm sm:text-base 
-                             rounded-full py-2 sm:py-3 px-4 sm:px-6
-                             hover:bg-gray-100 transition-colors
-                             whitespace-nowrap">
+                     bg-white text-black font-medium text-sm sm:text-base 
+                     rounded-full py-2 sm:py-3 px-4 sm:px-6
+                     hover:bg-gray-100 transition-colors
+                     whitespace-nowrap">
               Subscribe
             </Button>
-          </div>
+            </div>
 
           {/* Doodle Image */}
           <div className="flex-shrink-0">

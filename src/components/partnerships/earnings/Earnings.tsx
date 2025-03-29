@@ -1,4 +1,4 @@
-import FollowerCharts from '@/components/public-view-dashboard/Follower-chart'
+import FollowerCharts from '@/components/public-view-dashboard/PartnershipsSection'
 import React from 'react'
 
 const Earnings = () => {
