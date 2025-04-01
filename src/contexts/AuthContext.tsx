@@ -90,14 +90,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (credentials: LoginPayload): Promise<AuthResponse> => {
     try {
+      console.log("Attempting login with:", credentials.email);
       const response = await loginUser(credentials);
 
       if (response.success && response.token) {
+        console.log("Login successful, token received");
+
+        // Store the token
         setAuthToken(response.token);
+
+        // Verify token was stored correctly
+        const storedToken = getAuthToken();
+        if (storedToken) {
+          console.log("Token successfully stored in localStorage");
+        } else {
+          console.error("Failed to store token in localStorage");
+        }
 
         // Here we would typically decode the JWT token to get basic user info
         // For now, we're just setting a placeholder user
         setUser({ email: credentials.email });
+      } else {
+        console.warn("Login failed:", response.message);
       }
 
       return response;
@@ -112,13 +126,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = async (credentials: RegisterPayload) => {
     try {
+      console.log("Attempting registration with:", credentials.email);
       const response = await registerUser(credentials);
 
       // If registration is successful and we get a token, save it
       if (response.success && response.token) {
+        console.log("Registration successful, token received");
+
+        // Store the token
         setAuthToken(response.token);
+
+        // Verify token was stored correctly
+        const storedToken = getAuthToken();
+        if (storedToken) {
+          console.log("Token successfully stored in localStorage");
+        } else {
+          console.error("Failed to store token in localStorage");
+        }
+
         // Set basic user info
         setUser({ email: credentials.email });
+      } else {
+        console.warn("Registration failed:", response.message);
       }
 
       return response;

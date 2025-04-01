@@ -1,29 +1,293 @@
-'use client'
-import React from 'react'
-import Image from 'next/image'
+"use client";
+import React, { useState } from "react";
+import Image from "next/image";
+import { Button, Input } from "@lemonsqueezy/wedges";
+import { likePost, unlikePost, commentOnPost } from "@/services/postService";
+import { toast } from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
-const Post2 = () => {
-  return (
-    <div className='w-full'>
-      <div className='bg-[#1A1919] rounded-[20px] p-4'>
-        <div className='flex items-center mb-3'>
-          <Image 
-            src="/user-profile-photo-2.svg" 
-            width={42} 
-            height={42} 
-            alt='User profile'
-            className='rounded-full'
-          />
-          <h1 className='text-lg font-medium text-white ml-4'>Kishen Maran</h1>
-        </div>
-        <div>
-          <p className='font-medium text-sm text-[#FFFFFF7A]'>
-            A small post bio should suffice. Even though there is not much to write, I'd rather keep writing and fill in all the empty spots and make them not empty.
-          </p>
-        </div>      
-      </div>
-    </div>
-  )
+interface PostProps {
+  post: {
+    id: string;
+    content: string;
+    user: {
+      id: string;
+      name: string;
+      avatar?: string;
+    };
+    media?: string[];
+    tags?: string[];
+    location?: {
+      name: string;
+      coordinates?: {
+        latitude: number;
+        longitude: number;
+      };
+    };
+    visibility?: string;
+    createdAt?: string;
+    isLiked?: boolean;
+    likesCount?: number;
+    commentsCount?: number;
+  };
 }
 
-export default Post2
+const Post2 = ({ post }: PostProps) => {
+  const router = useRouter();
+
+  const [isLiked, setIsLiked] = useState(post.isLiked || false);
+  const [likesCount, setLikesCount] = useState(post.likesCount || 0);
+  const [showComments, setShowComments] = useState(false);
+  const [commentText, setCommentText] = useState("");
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [comments, setComments] = useState<
+    { id: string; content: string; user: { name: string; avatar?: string } }[]
+  >([]);
+
+  // Handle like/unlike
+  const handleLikeToggle = async () => {
+    try {
+      if (isLiked) {
+        // Unlike post
+        const response = await unlikePost(post.id);
+        if (response.success) {
+          setIsLiked(false);
+          setLikesCount((prev) => Math.max(0, prev - 1));
+        } else {
+          toast.error(response.message);
+        }
+      } else {
+        // Like post
+        const response = await likePost(post.id);
+        if (response.success) {
+          setIsLiked(true);
+          setLikesCount((prev) => prev + 1);
+        } else {
+          toast.error(response.message);
+        }
+      }
+    } catch (error) {
+      console.error("Error toggling like:", error);
+      toast.error("Failed to process your request");
+    }
+  };
+
+  // Handle comment submission
+  const handleCommentSubmit = async () => {
+    if (!commentText.trim()) return;
+
+    setIsSubmittingComment(true);
+
+    try {
+      const response = await commentOnPost(post.id, {
+        content: commentText,
+      });
+
+      if (response.success) {
+        // Add the new comment to local state
+        setComments([
+          ...comments,
+          {
+            id: response.data?.id || `temp-${Date.now()}`,
+            content: commentText,
+            user: {
+              name: "You", // This would be the current user's name
+              avatar: "/user-profile-photo.svg", // This would be the current user's avatar
+            },
+          },
+        ]);
+        setCommentText("");
+        toast.success("Comment added");
+      } else {
+        toast.error(response.message);
+      }
+    } catch (error) {
+      console.error("Error adding comment:", error);
+      toast.error("Failed to add comment");
+    } finally {
+      setIsSubmittingComment(false);
+    }
+  };
+
+  // Navigate to post detail page
+  const handlePostClick = () => {
+    router.push(`/posts/${post.id}`);
+  };
+
+  return (
+    <div className="w-full">
+      <div className="bg-[#1A1919] rounded-[20px] p-4">
+        <div className="flex items-center mb-3">
+          <Image 
+            src={post.user?.avatar || "/user-profile-photo-2.svg"}
+            width={42} 
+            height={42} 
+            alt="User profile"
+            className="rounded-full"
+          />
+          <div className="ml-4">
+            <h1 className="text-lg font-medium text-white">
+              {post.user?.name}
+            </h1>
+            {post.location && (
+              <div className="text-sm text-gray-400 flex items-center">
+                <Image
+                  src="/location.svg"
+                  width={12}
+                  height={12}
+                  alt="Location"
+                  className="mr-1"
+                />
+                <span>{post.location.name}</span>
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="mb-4 cursor-pointer" onClick={handlePostClick}>
+          <p className="font-medium text-sm text-[#FFFFFF7A]">{post.content}</p>
+
+          {/* Tags */}
+          {post.tags && post.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-3">
+              {post.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="bg-[#282828] text-gray-300 text-xs py-1 px-2 rounded-full"
+                >
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Likes count */}
+        {likesCount > 0 && (
+          <div className="flex items-center mb-3 text-gray-400 text-sm">
+            <Image
+              src="/thumbs-up-filled.svg"
+              width={16}
+              height={16}
+              alt="Likes"
+            />
+            <span className="ml-2">{likesCount} likes</span>
+          </div>
+        )}
+
+        {/* Comment, likes, share buttons */}
+        <div className="flex justify-between items-center mb-3">
+          <Button
+            onClick={handleLikeToggle}
+            className="flex items-center bg-transparent hover:bg-[#282828] rounded-lg px-3 py-2"
+          >
+            <Image
+              src={isLiked ? "/thumbs-up-filled.svg" : "/thumbs-up.svg"}
+              width={22}
+              height={22}
+              alt="Like"
+            />
+            <span
+              className={`font-medium ml-2 ${
+                isLiked ? "text-green-500" : "text-white"
+              }`}
+            >
+              {isLiked ? "Liked" : "Like"}
+            </span>
+          </Button>
+
+          <Button
+            onClick={() => setShowComments(!showComments)}
+            className="flex items-center bg-transparent hover:bg-[#282828] rounded-lg px-3 py-2"
+          >
+            <Image
+              src="/comment-icon.svg"
+              width={22}
+              height={22}
+              alt="Comment"
+            />
+            <span className="font-medium text-white ml-2">Comment</span>
+          </Button>
+
+          <Button className="flex items-center bg-transparent hover:bg-[#282828] rounded-lg px-3 py-2">
+            <Image src="/share.svg" width={22} height={22} alt="Share" />
+            <span className="font-medium text-white ml-2">Share</span>
+          </Button>
+        </div>
+
+        {/* Comments section */}
+        {showComments && (
+          <div className="mt-4 border-t border-[#282828] pt-3">
+            {/* Comment input */}
+            <div className="flex items-center mb-4">
+              <Image
+                src="/user-profile-photo.svg"
+                width={32}
+                height={32}
+                alt="Your profile"
+                className="rounded-full mr-3"
+              />
+              <div className="flex-1 relative">
+                <Input
+                  type="text"
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  placeholder="Write a comment..."
+                  className="w-full bg-[#282828] text-white border-none focus:outline-none rounded-full py-2 pr-12"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleCommentSubmit();
+                    }
+                  }}
+                />
+                <Button
+                  onClick={handleCommentSubmit}
+                  disabled={isSubmittingComment || !commentText.trim()}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-transparent text-green-500 hover:text-green-600"
+                >
+                  <Image
+                    src="/send-icon.svg"
+                    width={20}
+                    height={20}
+                    alt="Send"
+                  />
+                </Button>
+              </div>
+            </div>
+
+            {/* Comments list */}
+            <div className="space-y-3">
+              {comments.length > 0 ? (
+                comments.map((comment) => (
+                  <div key={comment.id} className="flex">
+                    <Image
+                      src={comment.user.avatar || "/user-profile-photo.svg"}
+                      width={32}
+                      height={32}
+                      alt="User profile"
+                      className="rounded-full mr-3 self-start mt-1"
+                    />
+                    <div className="bg-[#282828] rounded-lg p-2 flex-1">
+                      <div className="font-medium text-sm text-white">
+                        {comment.user.name}
+                      </div>
+                      <div className="text-gray-300 text-sm">
+                        {comment.content}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center text-gray-400 text-sm py-2">
+                  No comments yet. Be the first to comment!
+                </div>
+              )}
+            </div>
+        </div>      
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default Post2;

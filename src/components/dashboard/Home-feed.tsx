@@ -2,13 +2,33 @@
 import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { Button, Input } from "@lemonsqueezy/wedges";
+import { createPost } from "@/services/postService";
+import { toast } from "react-hot-toast";
+import { PlusCircle, ImagePlus, Mic, Settings } from "lucide-react";
 
-const Homefeed = () => {
+interface HomefeedProps {
+  onPostCreated?: () => void;
+}
+
+const Homefeed = ({ onPostCreated }: HomefeedProps) => {
   const [recording, setRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<string | null>(null);
-  const [fileName, setFileName] = useState<string | null>(null);
   const [postText, setPostText] = useState("");
   const [recordingTime, setRecordingTime] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState("");
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
+  const [visibility, setVisibility] = useState<
+    "public" | "private" | "friends"
+  >("public");
+  const [locationName, setLocationName] = useState("");
+  const [coordinates, setCoordinates] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -17,14 +37,10 @@ const Homefeed = () => {
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const uploadedFile = event.target.files ? event.target.files[0] : null;
     if (uploadedFile) {
-      setFileName(uploadedFile.name);
-      // Update the post text to include file name
-      setPostText((prev) =>
-        prev
-          ? `${prev}\nAttached: ${uploadedFile.name}`
-          : `Attached: ${uploadedFile.name}`
-      );
-      console.log("File uploaded:", uploadedFile);
+      // In a real implementation, you would upload the file to a storage service
+      // and get back a URL. For now, we'll simulate this with a placeholder URL
+      const fileUrl = `https://example.com/${uploadedFile.name}`;
+      setUploadedFiles([...uploadedFiles, fileUrl]);
     }
   };
 
@@ -77,11 +93,10 @@ const Homefeed = () => {
           setAudioBlob(audioUrl);
           chunksRef.current = [];
 
-          setPostText((prev) =>
-            prev
-              ? `${prev}\nAudio recording attached`
-              : `Audio recording attached`
-          );
+          // In a real implementation, you would upload the audio to a storage service
+          // and get back a URL. For now, we'll simulate this with the local audioUrl
+          const audioFileUrl = `https://example.com/audio-recording-${Date.now()}.webm`;
+          setUploadedFiles([...uploadedFiles, audioFileUrl]);
 
           console.log("Audio recorded:", blob);
         };
@@ -93,6 +108,95 @@ const Homefeed = () => {
     } else {
       mediaRecorderRef.current?.stop();
       setRecording(false);
+    }
+  };
+
+  // Add tag to the post
+  const handleAddTag = () => {
+    if (tagInput && !tags.includes(tagInput)) {
+      setTags([...tags, tagInput]);
+      setTagInput("");
+    }
+  };
+
+  // Remove tag from the post
+  const handleRemoveTag = (tagToRemove: string) => {
+    setTags(tags.filter((tag) => tag !== tagToRemove));
+  };
+
+  // Get current location
+  const handleGetLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setCoordinates({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          });
+          setLocationName("Current Location"); // This would be replaced with a reverse geocoding service
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          toast.error("Could not get your location");
+        }
+      );
+    } else {
+      toast.error("Geolocation is not supported by your browser");
+    }
+  };
+
+  // Handle post submission
+  const handleSubmitPost = async () => {
+    if (!postText.trim()) {
+      toast.error("Please enter some content for your post");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    // Prepare location data if available
+    const locationData =
+      locationName && coordinates
+        ? {
+            name: locationName,
+            coordinates: coordinates,
+          }
+        : undefined;
+
+    try {
+      const response = await createPost({
+        content: postText,
+        media: uploadedFiles.length > 0 ? uploadedFiles : undefined,
+        tags: tags.length > 0 ? tags : undefined,
+        location: locationData,
+        visibility: visibility,
+      });
+
+      if (response.success) {
+        toast.success("Post created successfully!");
+
+        // Reset form
+        setPostText("");
+        setUploadedFiles([]);
+        setTags([]);
+        setAudioBlob(null);
+        setLocationName("");
+        setCoordinates(null);
+        setVisibility("public");
+        setShowAdvancedOptions(false);
+
+        // Notify parent component that a post was created
+        if (onPostCreated) {
+          onPostCreated();
+        }
+      } else {
+        toast.error(response.message);
+      }
+    } catch (error) {
+      console.error("Error submitting post:", error);
+      toast.error("Failed to create post. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -111,21 +215,16 @@ const Homefeed = () => {
           ></textarea>
           <div className="absolute bottom-3 left-4 flex space-x-2 items-center">
             {/* File upload button */}
-            <label className="bg-[#282828] hover:bg-[#383838] p-1 cursor-pointer rounded">
+            <label className="bg-[#282828] hover:bg-[#383838] p-2 cursor-pointer rounded flex items-center justify-center">
               <Input
                 type="file"
-                accept="image/*"
+                accept="image/*,video/*"
                 className="hidden"
                 onChange={(event) =>
                   handleFileUpload(event as React.ChangeEvent<HTMLInputElement>)
                 }
               />
-              <Image
-                src="/add-photos.svg"
-                width={20}
-                height={20}
-                alt="Add photos"
-              />
+              <ImagePlus size={18} className="text-white" />
             </label>
 
             {/* Voice recording button */}
@@ -133,25 +232,28 @@ const Homefeed = () => {
               onClick={handleRecordAudio}
               className={`${
                 recording ? "bg-red-600" : "bg-[#282828] hover:bg-[#383838]"
-              } p-1 rounded flex items-center`}
+              } p-2 rounded flex items-center justify-center`}
             >
               {recording ? (
                 <>
-                  <div className="w-5 h-5 flex items-center justify-center">
-                    <div className="w-3 h-3 bg-white rounded-sm"></div>
+                  <div className="w-4 h-4 flex items-center justify-center">
+                    <div className="w-2 h-2 bg-white rounded-sm"></div>
                   </div>
                   <span className="ml-1 text-xs text-white">
                     {formatTime(recordingTime)}
                   </span>
                 </>
               ) : (
-                <Image
-                  src="/mic.svg"
-                  width={20}
-                  height={20}
-                  alt="Voice recording"
-                />
+                <Mic size={18} className="text-white" />
               )}
+            </Button>
+
+            {/* Toggle advanced options button */}
+            <Button
+              onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
+              className="bg-[#282828] hover:bg-[#383838] p-2 rounded flex items-center justify-center"
+            >
+              <Settings size={18} className="text-white" />
             </Button>
           </div>
 
@@ -164,6 +266,138 @@ const Homefeed = () => {
               </audio>
             </div>
           )}
+        </div>
+
+        {/* Display uploaded file names */}
+        {uploadedFiles.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {uploadedFiles.map((file, index) => (
+              <div
+                key={index}
+                className="bg-[#282828] text-white text-xs py-1 px-2 rounded-full flex items-center"
+              >
+                <span>{file.split("/").pop()}</span>
+                <Button
+                  onClick={() =>
+                    setUploadedFiles(
+                      uploadedFiles.filter((_, i) => i !== index)
+                    )
+                  }
+                  className="ml-1 text-red-400 hover:text-red-500"
+                >
+                  ×
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Advanced options */}
+        {showAdvancedOptions && (
+          <div className="mt-4 space-y-3 bg-[#282828] p-3 rounded-lg">
+            {/* Tags */}
+            <div>
+              <label className="text-white text-sm mb-1 block">Tags</label>
+              <div className="flex items-center">
+                <Input
+                  type="text"
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleAddTag()}
+                  placeholder="Add a tag"
+                  className="bg-[#1A1919] text-white text-sm border-none focus:outline-none rounded"
+                />
+                <Button
+                  onClick={handleAddTag}
+                  className="ml-2 bg-[#00B24E] hover:bg-[#00A047] text-white text-sm px-2 py-1 rounded"
+                >
+                  Add
+                </Button>
+              </div>
+              {tags.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {tags.map((tag) => (
+                    <div
+                      key={tag}
+                      className="bg-[#1A1919] text-white text-xs py-1 px-2 rounded-full flex items-center"
+                    >
+                      <span>#{tag}</span>
+                      <Button
+                        onClick={() => handleRemoveTag(tag)}
+                        className="ml-1 text-red-400 hover:text-red-500"
+                      >
+                        ×
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Location */}
+            <div>
+              <label className="text-white text-sm mb-1 block">Location</label>
+              <div className="flex items-center">
+                <Input
+                  type="text"
+                  value={locationName}
+                  onChange={(e) => setLocationName(e.target.value)}
+                  placeholder="Add a location"
+                  className="bg-[#1A1919] text-white text-sm border-none focus:outline-none rounded"
+                />
+                <Button
+                  onClick={handleGetLocation}
+                  className="ml-2 bg-[#1A1919] hover:bg-[#282828] text-white text-sm px-2 py-1 rounded flex items-center justify-center"
+                >
+                  <PlusCircle size={16} className="text-white" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Visibility */}
+            <div>
+              <label className="text-white text-sm mb-1 block">
+                Visibility
+              </label>
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => setVisibility("public")}
+                  className={`text-white text-sm py-1 px-3 rounded ${
+                    visibility === "public" ? "bg-[#00B24E]" : "bg-[#1A1919]"
+                  }`}
+                >
+                  Public
+                </Button>
+                <Button
+                  onClick={() => setVisibility("friends")}
+                  className={`text-white text-sm py-1 px-3 rounded ${
+                    visibility === "friends" ? "bg-[#00B24E]" : "bg-[#1A1919]"
+                  }`}
+                >
+                  Friends
+                </Button>
+                <Button
+                  onClick={() => setVisibility("private")}
+                  className={`text-white text-sm py-1 px-3 rounded ${
+                    visibility === "private" ? "bg-[#00B24E]" : "bg-[#1A1919]"
+                  }`}
+                >
+                  Private
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Post button */}
+        <div className="mt-4 flex justify-end">
+          <Button
+            onClick={handleSubmitPost}
+            disabled={isSubmitting || !postText.trim()}
+            className="bg-[#00B24E] hover:bg-[#00A047] text-white px-4 py-2 rounded-lg"
+          >
+            {isSubmitting ? "Posting..." : "Post"}
+          </Button>
         </div>
       </div>
     </div>
