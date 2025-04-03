@@ -7,6 +7,12 @@ import Leaderboard from "@/components/communities/leaderboard/leaderBoard";
 import axios from "axios";
 import { getAuthToken } from "@/utils/auth";
 import { toast } from "react-hot-toast";
+import {
+  getMessages,
+  sendMessage,
+  markMessagesAsRead,
+  Message as ApiMessage,
+} from "@/services/messageService";
 
 // Define types based on your existing code
 interface Message {
@@ -20,11 +26,12 @@ interface Message {
 }
 
 interface Chat {
-  id: number;
+  id: string;
   name: string;
   avatar: string;
   lastSeen: string;
   messages: Message[];
+  communityId: string;
 }
 
 interface JoinedCommunity {
@@ -42,11 +49,13 @@ const ChatWindowWrapper = ({
   activeTab,
   onBack,
   onChatUpdate,
+  onSendMessage,
 }: {
   chat: Chat;
   activeTab: string;
   onBack: () => void;
   onChatUpdate: (updatedChat: Chat) => void;
+  onSendMessage: (chatId: string, content: string) => Promise<void>;
 }) => {
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden pb-16 md:pb-0">
@@ -55,6 +64,7 @@ const ChatWindowWrapper = ({
         activeTab={activeTab}
         onBack={onBack}
         onChatUpdate={onChatUpdate}
+        onSendMessage={onSendMessage}
       />
     </div>
   );
@@ -72,6 +82,7 @@ export default function CommunityApp() {
     []
   );
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingMessages, setLoadingMessages] = useState(false);
 
   // Sample leaderboard users with actual images
   const leaderboardUsers = [
@@ -141,8 +152,19 @@ export default function CommunityApp() {
         }
       );
 
-      if (response.data.communities) {
-        setJoinedCommunities(response.data.communities);
+      if (response.data.success && response.data.data) {
+        setJoinedCommunities(
+          response.data.data.map((community: any) => ({
+            _id: community._id,
+            name: community.name,
+            description: community.description,
+            image: community.image?.startsWith("http")
+              ? "/community-1.svg"
+              : community.image || "/community-1.svg",
+            niche: community.niche,
+            memberCount: community.members?.length || 0,
+          }))
+        );
       }
     } catch (error) {
       console.error("Error fetching joined communities:", error);
@@ -155,10 +177,11 @@ export default function CommunityApp() {
   // Create sample chat objects for each leaderboard user
   const createChatForUser = (user: any): Chat => {
     return {
-      id: user.id,
+      id: user.id.toString(),
       name: user.name,
       avatar: user.avatar,
       lastSeen: "Online",
+      communityId: user.id.toString(),
       messages: [
         {
           id: 1,
@@ -182,6 +205,162 @@ export default function CommunityApp() {
     };
   };
 
+  // Convert API messages to UI message format
+  const convertApiMessagesToUiFormat = (
+    apiMessages: ApiMessage[],
+    userId: string
+  ): Message[] => {
+    return apiMessages.map((msg, index) => ({
+      id: index + 1,
+      content: msg.content || "",
+      sender: msg.sender && msg.sender._id === userId ? "self" : "other",
+      timestamp: new Date(msg.createdAt || Date.now()).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      // Add file and image properties if needed
+      ...(msg.attachments &&
+        msg.attachments.length > 0 && {
+          imageUrl: msg.attachments[0]?.startsWith("image/")
+            ? msg.attachments[0]
+            : undefined,
+          fileUrl: !msg.attachments[0]?.startsWith("image/")
+            ? msg.attachments[0]
+            : undefined,
+          fileName: !msg.attachments[0]?.startsWith("image/")
+            ? "Attachment"
+            : undefined,
+        }),
+    }));
+  };
+
+  // Fetch messages for a community
+  const fetchCommunityMessages = async (
+    communityId: string,
+    communityName: string,
+    communityAvatar: string
+  ) => {
+    setLoadingMessages(true);
+    try {
+      const response = await getMessages(communityId);
+
+      if (response.success) {
+        // Get user ID from token to determine message sender
+        const token = getAuthToken();
+        let userId = "";
+        if (token) {
+          const tokenParts = token.split(".");
+          if (tokenParts.length === 3) {
+            const payload = JSON.parse(atob(tokenParts[1]));
+            userId = payload.userId || payload._id || payload.id || "";
+          }
+        }
+
+        // Convert API messages to UI format
+        const messages = convertApiMessagesToUiFormat(response.data, userId);
+
+        // Create chat object
+        const chat: Chat = {
+          id: communityId,
+          name: communityName,
+          avatar: communityAvatar,
+          lastSeen: `${response.data.length} messages`,
+          messages: messages,
+          communityId: communityId,
+        };
+
+        setCurrentChat(chat);
+
+        // Mark messages as read
+        await markMessagesAsRead(communityId);
+      } else {
+        toast.error(response.message || "Failed to load messages");
+      }
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+      toast.error("Failed to load messages");
+    } finally {
+      setLoadingMessages(false);
+    }
+  };
+
+  // Handle sending a message
+  const handleSendMessage = async (communityId: string, content: string) => {
+    try {
+      // First, add the message to the UI immediately for better UX
+      if (currentChat) {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+
+        const tempMessage: Message = {
+          id:
+            (currentChat.messages.length > 0
+              ? Math.max(...currentChat.messages.map((m) => m.id))
+              : 0) + 1,
+          content: content,
+          sender: "self",
+          timestamp: timeString,
+        };
+
+        const updatedChat = {
+          ...currentChat,
+          messages: [...currentChat.messages, tempMessage],
+        };
+
+        setCurrentChat(updatedChat);
+      }
+
+      // Then send the message to the API
+      const response = await sendMessage(communityId, content);
+
+      if (response.success) {
+        // Refresh messages after sending, but preserve the current chat state
+        if (currentChat) {
+          const response = await getMessages(communityId);
+
+          if (response.success) {
+            // Get user ID from token to determine message sender
+            const token = getAuthToken();
+            let userId = "";
+            if (token) {
+              const tokenParts = token.split(".");
+              if (tokenParts.length === 3) {
+                const payload = JSON.parse(atob(tokenParts[1]));
+                userId = payload.userId || payload._id || payload.id || "";
+              }
+            }
+
+            // Convert API messages to UI format
+            const messages = convertApiMessagesToUiFormat(
+              response.data,
+              userId
+            );
+
+            // Create updated chat object
+            const updatedChat = {
+              ...currentChat,
+              messages: messages,
+              lastSeen: `${response.data.length} messages`,
+            };
+
+            setCurrentChat(updatedChat);
+
+            // Mark messages as read
+            await markMessagesAsRead(communityId);
+          }
+        }
+      } else {
+        toast.error(response.message || "Failed to send message");
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+      toast.error("Failed to send message");
+    }
+  };
+
   const handleBack = () => {
     setCurrentChat(undefined);
     if (isMobile) {
@@ -195,8 +374,21 @@ export default function CommunityApp() {
   };
 
   const handleChatSelect = (user: any) => {
-    const chat = createChatForUser(user);
-    setCurrentChat(chat);
+    // For My Communities, use real community data
+    if (selectedCategory === "My Communities") {
+      // Get the community ID from the user object
+      const communityId = user.id;
+      const communityName = user.name;
+      const communityAvatar = user.avatar;
+
+      // Fetch messages for this community
+      fetchCommunityMessages(communityId, communityName, communityAvatar);
+    } else {
+      // For other categories, use sample data as before
+      const chat = createChatForUser(user);
+      setCurrentChat(chat);
+    }
+
     if (isMobile) {
       setShowLeaderboard(false);
       setShowBottomNav(false); // Hide bottom nav when in chat on mobile
@@ -272,7 +464,9 @@ export default function CommunityApp() {
                         name: community.name,
                         rank: `${community.memberCount} members`,
                         community: community.niche,
-                        avatar: community.image || "/community-1.svg",
+                        avatar: community.image?.startsWith("http")
+                          ? "/community-1.svg"
+                          : community.image || "/community-1.svg",
                         hasUnread: false,
                         medal: "/medal.svg",
                       }))
@@ -298,6 +492,9 @@ export default function CommunityApp() {
                 activeTab={activeTab}
                 onBack={handleBack}
                 onChatUpdate={handleChatUpdate}
+                onSendMessage={(chatId, content) =>
+                  handleSendMessage(chatId, content)
+                }
               />
             </div>
           )}

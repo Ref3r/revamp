@@ -13,7 +13,9 @@ import {
   Check,
 } from "lucide-react";
 import { Button, Input } from "@lemonsqueezy/wedges";
-import CollaborationForm, { CollaborationFormData } from "../collab-request-form/CollaborationForm ";
+import CollaborationForm, {
+  CollaborationFormData,
+} from "../collab-request-form/CollaborationForm ";
 import Form from "@/components/communities/community-challenge-form/Form";
 
 interface Message {
@@ -30,11 +32,12 @@ interface Message {
 }
 
 interface Chat {
-  id: number;
+  id: string; // Changed from number to string to match communityId
   name: string;
   avatar: string;
   lastSeen: string;
   messages: Message[];
+  communityId?: string; // Added to support API messaging
 }
 
 interface ChatWindowProps {
@@ -42,6 +45,7 @@ interface ChatWindowProps {
   activeTab: string;
   onBack: () => void;
   onChatUpdate: (updatedChat: Chat) => void;
+  onSendMessage?: (chatId: string, content: string) => Promise<void>;
 }
 
 export default function ChatWindow({
@@ -49,6 +53,7 @@ export default function ChatWindow({
   activeTab,
   onBack,
   onChatUpdate,
+  onSendMessage,
 }: ChatWindowProps) {
   const [chat, setChat] = useState<Chat | undefined>(initialChat);
   const [newMessage, setNewMessage] = useState("");
@@ -138,7 +143,7 @@ export default function ChatWindow({
       { value: "content-creation", label: "Content Creation" },
       { value: "social-media-takeover", label: "Social Media Takeover" },
     ];
-    const type = collabTypes.find(type => type.value === value);
+    const type = collabTypes.find((type) => type.value === value);
     return type ? type.label : value;
   };
 
@@ -205,38 +210,46 @@ export default function ChatWindow({
       onChatUpdate(updatedChat);
     }
 
+    // Call API to send message if onSendMessage prop is provided and we have a communityId
+    if (onSendMessage && chat.communityId && newMessage.trim()) {
+      onSendMessage(chat.communityId, newMessage.trim()).catch((error) => {
+        console.error("Error sending message:", error);
+      });
+    } else {
+      // For non-API chats, use the fake response
+      setTimeout(() => {
+        const responseContent = generateHardcodedResponse(userMessage.content);
+        const responseTime = new Date();
+        const responseTimeString = responseTime.toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+
+        const responseMessage: Message = {
+          id:
+            (updatedMessages.length > 0
+              ? Math.max(...updatedMessages.map((m) => m.id))
+              : 0) + 1,
+          content: responseContent,
+          sender: "other",
+          timestamp: responseTimeString,
+        };
+
+        const updatedChatWithResponse = {
+          ...chat,
+          messages: [...updatedMessages, responseMessage],
+        };
+
+        setChat(updatedChatWithResponse);
+        if (onChatUpdate) {
+          onChatUpdate(updatedChatWithResponse);
+        }
+      }, 1000);
+    }
+
     setNewMessage("");
     setSelectedImage(null);
     setSelectedFile(null);
-
-    setTimeout(() => {
-      const responseContent = generateHardcodedResponse(userMessage.content);
-      const responseTime = new Date();
-      const responseTimeString = responseTime.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-
-      const responseMessage: Message = {
-        id:
-          (updatedMessages.length > 0
-            ? Math.max(...updatedMessages.map((m) => m.id))
-            : 0) + 1,
-        content: responseContent,
-        sender: "other",
-        timestamp: responseTimeString,
-      };
-
-      const updatedChatWithResponse = {
-        ...chat,
-        messages: [...updatedMessages, responseMessage],
-      };
-
-      setChat(updatedChatWithResponse);
-      if (onChatUpdate) {
-        onChatUpdate(updatedChatWithResponse);
-      }
-    }, 1000);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -443,25 +456,35 @@ export default function ChatWindow({
               // Collaboration Request Card
               <div className="max-w-[300px] bg-[#DBDBDB0A] rounded-lg overflow-hidden shadow-lg">
                 <div className="p-4 space-y-2 text-white">
-                  <h3 className="font-bold">Collab Request: {message.collabData.collaborationRequest}</h3>
+                  <h3 className="font-bold">
+                    Collab Request: {message.collabData.collaborationRequest}
+                  </h3>
                   <p className="text-sm text-gray-300">
-                    Collab Type: {message.collabData.collaborationTypes.length > 0 
-                      ? getCollabTypeLabel(message.collabData.collaborationTypes[0]) 
+                    Collab Type:{" "}
+                    {message.collabData.collaborationTypes.length > 0
+                      ? getCollabTypeLabel(
+                          message.collabData.collaborationTypes[0]
+                        )
                       : "Not specified"}
                   </p>
                   <p className="text-sm text-gray-300">
-                    Deadline: {message.collabData.deadline 
-                      ? new Date(message.collabData.deadline).toLocaleDateString() 
+                    Deadline:{" "}
+                    {message.collabData.deadline
+                      ? new Date(
+                          message.collabData.deadline
+                        ).toLocaleDateString()
                       : "Not specified"}
                   </p>
                   <p className="text-sm text-gray-300">
                     Budget: ${message.collabData.price || "0"} (Funded)
                   </p>
-                  
+
                   {message.collabAccepted ? (
                     <div className="bg-none text-white px-4 py-2 rounded flex items-center justify-center gap-2">
                       <Check size={16} />
-                      <span>Project accepted! Please share all the details here</span>
+                      <span>
+                        Project accepted! Please share all the details here
+                      </span>
                     </div>
                   ) : (
                     <Button
@@ -695,9 +718,9 @@ export default function ChatWindow({
           <div className="fixed top-0 right-0 h-full w-full md:w-[450px] bg-[#0E0E0E] shadow-lg overflow-y-auto animate-slide-in">
             <div className="flex justify-between items-center p-4 pt-6" />
             <div className="px-4 pb-6">
-              <CollaborationForm 
-                isFromChat={true} 
-                onClose={toggleForm} 
+              <CollaborationForm
+                isFromChat={true}
+                onClose={toggleForm}
                 onSubmit={handleCollabFormSubmit}
               />
             </div>
