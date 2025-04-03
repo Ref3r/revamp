@@ -1,58 +1,113 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button, Input } from "@lemonsqueezy/wedges";
 import { likePost, unlikePost, commentOnPost } from "@/services/postService";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { getAuthToken } from "@/utils/auth";
 
 interface PostProps {
   post: {
-    id: string;
+    _id: string;
     content: string;
-    user: {
-      id: string;
-      name: string;
-      avatar?: string;
+    media: string[];
+    author: {
+      _id: string;
+      profilePicture: string;
     };
-    media?: string[];
-    isLiked?: boolean;
-    likesCount?: number;
-    commentsCount?: number;
+    likes: string[];
+    tags: string[];
+    visibility: string;
+    comments: any[];
+    createdAt: string;
+    updatedAt: string;
+    location?: {
+      coordinates: {
+        latitude: number;
+        longitude: number;
+      };
+      name: string;
+    };
   };
 }
 
 const Post = ({ post }: PostProps) => {
   const router = useRouter();
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  const [isLiked, setIsLiked] = useState(post.isLiked || false);
-  const [likesCount, setLikesCount] = useState(post.likesCount || 0);
+  // Fetch current user ID on mount
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const token = getAuthToken();
+        if (!token) return;
+
+        const API_URL = process.env.NEXT_PUBLIC_API_URL;
+        if (!API_URL) return;
+
+        const response = await fetch(`${API_URL}/api/v1/users/me`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setCurrentUserId(data.user._id);
+        }
+      } catch (error) {
+        console.error("Error fetching current user:", error);
+      }
+    };
+
+    fetchCurrentUser();
+  }, []);
+
+  const [isLiked, setIsLiked] = useState(
+    post.likes?.includes(currentUserId || "") || false
+  );
+  const [likesCount, setLikesCount] = useState(post.likes?.length || 0);
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
-  const [comments, setComments] = useState<
-    { id: string; content: string; user: { name: string; avatar?: string } }[]
-  >([]);
+  const [comments, setComments] = useState<any[]>(post.comments || []);
+
+  // Update isLiked when currentUserId changes
+  useEffect(() => {
+    if (currentUserId) {
+      setIsLiked(post.likes?.includes(currentUserId) || false);
+    }
+  }, [currentUserId, post.likes]);
 
   // Handle like/unlike
   const handleLikeToggle = async () => {
+    if (!currentUserId) {
+      toast.error("Please log in to like posts");
+      return;
+    }
+
     try {
       if (isLiked) {
         // Unlike post
-        const response = await unlikePost(post.id);
+        const response = await unlikePost(post._id);
         if (response.success) {
+          // Remove current user's ID from likes array
+          post.likes = post.likes.filter((id) => id !== currentUserId);
           setIsLiked(false);
-          setLikesCount((prev) => Math.max(0, prev - 1));
+          setLikesCount(post.likes.length);
         } else {
           toast.error(response.message);
         }
       } else {
         // Like post
-        const response = await likePost(post.id);
+        const response = await likePost(post._id);
         if (response.success) {
+          // Add current user's ID to likes array
+          post.likes.push(currentUserId);
           setIsLiked(true);
-          setLikesCount((prev) => prev + 1);
+          setLikesCount(post.likes.length);
         } else {
           toast.error(response.message);
         }
@@ -70,7 +125,7 @@ const Post = ({ post }: PostProps) => {
     setIsSubmittingComment(true);
 
     try {
-      const response = await commentOnPost(post.id, {
+      const response = await commentOnPost(post._id, {
         content: commentText,
       });
 
@@ -79,11 +134,11 @@ const Post = ({ post }: PostProps) => {
         setComments([
           ...comments,
           {
-            id: response.data?.id || `temp-${Date.now()}`,
+            _id: response.data?._id || `temp-${Date.now()}`,
             content: commentText,
-            user: {
-              name: "You", // This would be the current user's name
-              avatar: "/user-profile-photo.svg", // This would be the current user's avatar
+            author: {
+              _id: "current-user", // This would be the current user's ID
+              profilePicture: "/user-profile-photo.svg", // This would be the current user's avatar
             },
           },
         ]);
@@ -102,23 +157,23 @@ const Post = ({ post }: PostProps) => {
 
   // Navigate to post detail page
   const handlePostClick = () => {
-    router.push(`/posts/${post.id}`);
+    router.push(`/posts/${post._id}`);
   };
 
   return (
     <div className="w-full">
       <div className="bg-[#1A1919] rounded-[20px] p-4">
         <div className="flex items-center mb-4">
-          <Image 
-            src={post.user?.avatar || "/user-profile-photo.svg"}
-            width={42} 
-            height={42} 
+          <Image
+            src={post.author?.profilePicture || "/user-profile-photo.svg"}
+            width={42}
+            height={42}
             alt="User profile"
             className="rounded-full"
           />
           <div className="ml-4">
             <h1 className="font-medium text-lg text-white">
-              {post.user?.name}
+              {post.author?._id}
             </h1>
             {post.location && (
               <div className="text-sm text-gray-400 flex items-center">
@@ -134,7 +189,7 @@ const Post = ({ post }: PostProps) => {
             )}
           </div>
         </div>
-        
+
         <div className="mb-4 cursor-pointer" onClick={handlePostClick}>
           {/* Post content */}
           <p className="text-white mb-3">{post.content}</p>
@@ -158,14 +213,14 @@ const Post = ({ post }: PostProps) => {
             <div className="relative w-full pb-[56.25%]">
               {" "}
               {/* 16:9 aspect ratio container */}
-            <Image 
+              <Image
                 src={post.media[0]}
                 alt="Post media"
-              fill
+                fill
                 style={{ objectFit: "cover" }}
                 className="rounded-lg"
-            />
-          </div>
+              />
+            </div>
           )}
         </div>
 
@@ -251,45 +306,47 @@ const Post = ({ post }: PostProps) => {
                 <Button
                   onClick={handleCommentSubmit}
                   disabled={isSubmittingComment || !commentText.trim()}
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-transparent text-green-500 hover:text-green-600"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-transparent hover:bg-transparent"
                 >
-                  <Image
-                    src="/send-icon.svg"
-                    width={20}
-                    height={20}
-                    alt="Send"
-                  />
+                  {isSubmittingComment ? (
+                    <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-green-500"></div>
+                  ) : (
+                    <Image
+                      src="/send.svg"
+                      width={20}
+                      height={20}
+                      alt="Send"
+                      className="opacity-50 hover:opacity-100"
+                    />
+                  )}
                 </Button>
               </div>
             </div>
 
             {/* Comments list */}
-            <div className="space-y-3">
-              {comments.length > 0 ? (
-                comments.map((comment) => (
-                  <div key={comment.id} className="flex">
-                    <Image
-                      src={comment.user.avatar || "/user-profile-photo.svg"}
-                      width={32}
-                      height={32}
-                      alt="User profile"
-                      className="rounded-full mr-3 self-start mt-1"
-                    />
-                    <div className="bg-[#282828] rounded-lg p-2 flex-1">
-                      <div className="font-medium text-sm text-white">
-                        {comment.user.name}
-                      </div>
-                      <div className="text-gray-300 text-sm">
-                        {comment.content}
-                      </div>
+            <div className="space-y-4">
+              {comments.map((comment) => (
+                <div key={comment._id} className="flex items-start">
+                  <Image
+                    src={
+                      comment.author?.profilePicture ||
+                      "/user-profile-photo.svg"
+                    }
+                    width={32}
+                    height={32}
+                    alt="Commenter profile"
+                    className="rounded-full mr-3"
+                  />
+                  <div className="flex-1">
+                    <div className="bg-[#282828] rounded-lg p-3">
+                      <p className="text-white text-sm">{comment.content}</p>
                     </div>
+                    <p className="text-gray-400 text-xs mt-1">
+                      {comment.author?._id}
+                    </p>
                   </div>
-                ))
-              ) : (
-                <div className="text-center text-gray-400 text-sm py-2">
-                  No comments yet. Be the first to comment!
                 </div>
-              )}
+              ))}
             </div>
           </div>
         )}

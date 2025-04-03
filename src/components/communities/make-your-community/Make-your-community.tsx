@@ -152,7 +152,7 @@ const Makeyourcommunity = () => {
   return (
     <div className="w-full p-6 rounded-lg">
       <h1 className="text-xl sm:text-2xl text-[#FFFFFF] font-bold mb-6">
-        Or make your own Community
+        Make your own Community
       </h1>
 
       {error && (

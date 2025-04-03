@@ -1,67 +1,112 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { Button, Input } from "@lemonsqueezy/wedges";
 import { likePost, unlikePost, commentOnPost } from "@/services/postService";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { getAuthToken } from "@/utils/auth";
 
 interface PostProps {
   post: {
-    id: string;
+    _id: string;
     content: string;
-    user: {
-      id: string;
-      name: string;
-      avatar?: string;
+    media: string[];
+    author: {
+      _id: string;
+      profilePicture: string;
     };
-    media?: string[];
-    tags?: string[];
+    likes: string[];
+    tags: string[];
+    visibility: string;
+    comments: any[];
+    createdAt: string;
+    updatedAt: string;
     location?: {
-      name: string;
-      coordinates?: {
+      coordinates: {
         latitude: number;
         longitude: number;
       };
+      name: string;
     };
-    visibility?: string;
-    createdAt?: string;
-    isLiked?: boolean;
-    likesCount?: number;
-    commentsCount?: number;
   };
 }
 
 const Post2 = ({ post }: PostProps) => {
   const router = useRouter();
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  const [isLiked, setIsLiked] = useState(post.isLiked || false);
-  const [likesCount, setLikesCount] = useState(post.likesCount || 0);
+  // Fetch current user ID on mount
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const token = getAuthToken();
+        if (!token) return;
+
+        const API_URL = process.env.NEXT_PUBLIC_API_URL;
+        if (!API_URL) return;
+
+        const response = await fetch(`${API_URL}/api/v1/users/me`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setCurrentUserId(data.user._id);
+        }
+      } catch (error) {
+        console.error("Error fetching current user:", error);
+      }
+    };
+
+    fetchCurrentUser();
+  }, []);
+
+  const [isLiked, setIsLiked] = useState(
+    post.likes?.includes(currentUserId || "") || false
+  );
+  const [likesCount, setLikesCount] = useState(post.likes?.length || 0);
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
-  const [comments, setComments] = useState<
-    { id: string; content: string; user: { name: string; avatar?: string } }[]
-  >([]);
+  const [comments, setComments] = useState<any[]>(post.comments || []);
+
+  // Update isLiked when currentUserId changes
+  useEffect(() => {
+    if (currentUserId) {
+      setIsLiked(post.likes?.includes(currentUserId) || false);
+    }
+  }, [currentUserId, post.likes]);
 
   // Handle like/unlike
   const handleLikeToggle = async () => {
+    if (!currentUserId) {
+      toast.error("Please log in to like posts");
+      return;
+    }
+
     try {
       if (isLiked) {
         // Unlike post
-        const response = await unlikePost(post.id);
+        const response = await unlikePost(post._id);
         if (response.success) {
+          // Remove current user's ID from likes array
+          post.likes = post.likes.filter((id) => id !== currentUserId);
           setIsLiked(false);
-          setLikesCount((prev) => Math.max(0, prev - 1));
+          setLikesCount(post.likes.length);
         } else {
           toast.error(response.message);
         }
       } else {
         // Like post
-        const response = await likePost(post.id);
+        const response = await likePost(post._id);
         if (response.success) {
+          // Add current user's ID to likes array
+          post.likes.push(currentUserId);
           setIsLiked(true);
-          setLikesCount((prev) => prev + 1);
+          setLikesCount(post.likes.length);
         } else {
           toast.error(response.message);
         }
@@ -79,7 +124,7 @@ const Post2 = ({ post }: PostProps) => {
     setIsSubmittingComment(true);
 
     try {
-      const response = await commentOnPost(post.id, {
+      const response = await commentOnPost(post._id, {
         content: commentText,
       });
 
@@ -111,23 +156,23 @@ const Post2 = ({ post }: PostProps) => {
 
   // Navigate to post detail page
   const handlePostClick = () => {
-    router.push(`/posts/${post.id}`);
+    router.push(`/posts/${post._id}`);
   };
 
   return (
     <div className="w-full">
       <div className="bg-[#1A1919] rounded-[20px] p-4">
         <div className="flex items-center mb-3">
-          <Image 
-            src={post.user?.avatar || "/user-profile-photo-2.svg"}
-            width={42} 
-            height={42} 
+          <Image
+            src={post.author.profilePicture || "/user-profile-photo-2.svg"}
+            width={42}
+            height={42}
             alt="User profile"
             className="rounded-full"
           />
           <div className="ml-4">
             <h1 className="text-lg font-medium text-white">
-              {post.user?.name}
+              {post.author._id}
             </h1>
             {post.location && (
               <div className="text-sm text-gray-400 flex items-center">
@@ -283,7 +328,7 @@ const Post2 = ({ post }: PostProps) => {
                 </div>
               )}
             </div>
-        </div>      
+          </div>
         )}
       </div>
     </div>

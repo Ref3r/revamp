@@ -34,7 +34,7 @@ const Dashboard = () => {
       // Wait a moment for any localStorage operations to complete
       setTimeout(() => {
         const token = getAuthToken();
-        console.log("Dashboard - Auth Token Check:", {
+        console.log("Dashboard - Autimage.pngh Token Check:", {
           hasToken: !!token,
           tokenFirstChars: token ? `${token.substring(0, 10)}...` : null,
         });
@@ -202,7 +202,7 @@ const Dashboard = () => {
                   </button>
                 </div>
               ) : posts.length > 0 ? (
-                posts.map((post) => <Post key={post.id} post={post} />)
+                posts.map((post) => <Post key={post._id} post={post} />)
               ) : (
                 <div className="bg-[#1A1919] rounded-[20px] p-6 text-center">
                   <p className="text-white mb-4">
