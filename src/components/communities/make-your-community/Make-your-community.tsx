@@ -16,6 +16,7 @@ import Image from "next/image";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { getAuthToken, checkAuthStatus } from "@/utils/auth";
+import { toast } from "react-hot-toast";
 
 const Makeyourcommunity = () => {
   const router = useRouter();
@@ -124,7 +125,18 @@ const Makeyourcommunity = () => {
       );
 
       if (response.status === 201) {
-        router.push("/communities"); // Redirect to communities page after successful creation
+        toast.success("Community created successfully! 🎉", {
+          duration: 3000,
+          position: "top-center",
+          style: {
+            background: "#0BA360",
+            color: "white",
+          },
+        });
+        // Add a small delay before redirecting to show the toast
+        setTimeout(() => {
+          router.push("/communities");
+        }, 1000);
       }
     } catch (err: any) {
       console.error("Error creating community:", err);

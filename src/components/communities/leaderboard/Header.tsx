@@ -1,18 +1,34 @@
 "use client";
 import { Button } from "@lemonsqueezy/wedges";
-import { Menu, Plus, X } from "lucide-react";
+import { Menu, Plus, X, Users } from "lucide-react";
 import React, { useState } from "react";
 import MainCommunityComponent from "../MainCommunityComponent/MainCommunityComponent";
+import axios from "axios";
+import { getAuthToken } from "@/utils/auth";
+import { toast } from "react-hot-toast";
+
+interface JoinedCommunity {
+  _id: string;
+  name: string;
+  description: string;
+  image: string;
+  niche: string;
+  memberCount: number;
+}
 
 // Header Component with responsive design and hamburger menu
 const Header = ({
   selectedCategory,
   setSelectedCategory,
   isMobile,
+  onFetchJoinedCommunities,
+  isLoading,
 }: {
   selectedCategory: string;
   setSelectedCategory: (category: string) => void;
   isMobile: boolean;
+  onFetchJoinedCommunities: () => void;
+  isLoading: boolean;
 }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [showCommunity, setShowCommunity] = useState(false);
@@ -57,12 +73,23 @@ const Header = ({
           )}
         </div>
 
-        <Button
-          className="bg-gradient-to-r from-[#0BA360] to-[#27A980] hover:from-[#27A980] hover:to-[#0BA360] text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-md text-xs sm:text-sm flex items-center"
-          onClick={handleNewCommunityClick} // Attach the click handler here
-        >
-          {isMobile ? "New" : "New Community"}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            className="bg-[#1A1919] hover:bg-[#2D2D2D] text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-md text-xs sm:text-sm flex items-center gap-2"
+            onClick={onFetchJoinedCommunities}
+            disabled={isLoading}
+          >
+            <Users size={16} />
+            {isMobile ? "" : "My Communities"}
+          </Button>
+
+          <Button
+            className="bg-gradient-to-r from-[#0BA360] to-[#27A980] hover:from-[#27A980] hover:to-[#0BA360] text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-md text-xs sm:text-sm flex items-center"
+            onClick={handleNewCommunityClick}
+          >
+            {isMobile ? "New" : "New Community"}
+          </Button>
+        </div>
 
         {/* Conditionally render MainCommunityComponent with animation */}
         <div
@@ -102,7 +129,7 @@ const Header = ({
       {isMobile && menuOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-20"
-          onClick={() => setMenuOpen(false)} // Close menu when clicking outside
+          onClick={() => setMenuOpen(false)}
           style={{ top: "85px" }}
         />
       )}
@@ -111,19 +138,24 @@ const Header = ({
       {!isMobile && (
         <div className="mt-4 overflow-x-auto pb-2">
           <div className="flex space-x-2 min-w-max">
-            {categories.map((category) => (
-              <button
-                key={category}
-                className={`px-4 py-1.5 rounded-full text-sm ${
-                  selectedCategory === category
-                    ? "bg-[#2D2D2D] text-white font-medium"
-                    : "bg-[#191919] text-[#FFFFFF80] hover:bg-[#222222] border border-[#FFFFFF66]"
-                }`}
-                onClick={() => setSelectedCategory(category)}
-              >
-                {category}
-              </button>
-            ))}
+            {[
+              ...categories,
+              selectedCategory === "My Communities" ? "My Communities" : null,
+            ]
+              .filter(Boolean)
+              .map((category) => (
+                <button
+                  key={category}
+                  className={`px-4 py-1.5 rounded-full text-sm ${
+                    selectedCategory === category
+                      ? "bg-[#2D2D2D] text-white font-medium"
+                      : "bg-[#191919] text-[#FFFFFF80] hover:bg-[#222222] border border-[#FFFFFF66]"
+                  }`}
+                  onClick={() => setSelectedCategory(category || "")}
+                >
+                  {category}
+                </button>
+              ))}
           </div>
         </div>
       )}

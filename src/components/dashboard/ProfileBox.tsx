@@ -5,7 +5,19 @@ import { Button } from "@/components/ui/button";
 import CollaborationForm from "../chat-section/collab-request-form/CollaborationForm ";
 import { X } from "lucide-react";
 
-const ProfileBox = ({ isPublicView = false }) => {
+interface ProfileBoxProps {
+  isPublicView?: boolean;
+  userData?: any;
+  isLoading?: boolean;
+  error?: string;
+}
+
+const ProfileBox = ({
+  isPublicView = false,
+  userData,
+  isLoading,
+  error,
+}: ProfileBoxProps) => {
   const [showForm, setShowForm] = useState(false);
 
   const toggleForm = () => {
@@ -17,6 +29,40 @@ const ProfileBox = ({ isPublicView = false }) => {
     }
   };
 
+  // Use default placeholder or user data
+  const username = userData?.email?.split("@")[0] || "Parry";
+  const profilePic = userData?.profilePicture || "/profile-photo.svg";
+  const bio =
+    userData?.bio ||
+    "Sometimes like to design, sometimes just like to create chaos";
+
+  // If loading, show loading state
+  if (isLoading) {
+    return (
+      <div className="w-full">
+        <div className="bg-[#1A1919] rounded-[20px] p-4">
+          <div className="flex justify-center items-center h-40">
+            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-green-500"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // If error, show error state
+  if (error) {
+    return (
+      <div className="w-full">
+        <div className="bg-[#1A1919] rounded-[20px] p-4">
+          <div className="flex justify-center items-center h-40 flex-col">
+            <p className="text-red-400 mb-2">Error loading profile</p>
+            <p className="text-white text-sm">{error}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full">
       <div className="bg-[#1A1919] rounded-[20px] p-4">
@@ -24,7 +70,7 @@ const ProfileBox = ({ isPublicView = false }) => {
           <div className="flex flex-col items-center">
             <div className="mb-2">
               <Image
-                src="/profile-photo.svg"
+                src={profilePic}
                 width={80}
                 height={80}
                 alt="Profile photo"
@@ -32,13 +78,15 @@ const ProfileBox = ({ isPublicView = false }) => {
               />
             </div>
             <div className="flex flex-col items-center mb-1">
-              <h1 className="text-white font-bold text-xl">Parry</h1>
+              <h1 className="text-white font-bold text-xl">{username}</h1>
               <div className="border border-white rounded-full px-2 py-0.5 text-[8px] text-white bg-[#0E0E0E]">
-                Rank 49
+                {userData?.followers?.length
+                  ? `${userData.followers.length} followers`
+                  : "Rank 49"}
               </div>
             </div>
             <p className="text-sm text-[#FFFFFF7A] font-normal text-center mb-2 max-w-[220px]">
-              Sometimes like to design, sometimes just like to create chaos
+              {bio}
             </p>
             {isPublicView && (
               <Button
@@ -65,7 +113,7 @@ const ProfileBox = ({ isPublicView = false }) => {
 
         <div className="hidden 2xl:flex items-center gap-4">
           <Image
-            src="/profile-photo.svg"
+            src={profilePic}
             width={130}
             height={130}
             alt="Profile photo"
@@ -73,14 +121,14 @@ const ProfileBox = ({ isPublicView = false }) => {
           />
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
-              <h1 className="text-white font-bold text-xl">Parry</h1>
+              <h1 className="text-white font-bold text-xl">{username}</h1>
               <div className="border border-white rounded-full px-2 py-0.5 text-[8px] text-white bg-[#0E0E0E]">
-                Rank 49
+                {userData?.followers?.length
+                  ? `${userData.followers.length} followers`
+                  : "Rank 49"}
               </div>
             </div>
-            <p className="text-sm text-[#FFFFFF7A] font-normal mt-2">
-              Sometimes like to design, sometimes just like to create chaos
-            </p>
+            <p className="text-sm text-[#FFFFFF7A] font-normal mt-2">{bio}</p>
             {isPublicView && (
               <Button
                 className="bg-gradient-to-r from-[#0BA360] to-[#27A980] hover:bg-gradient-to-r hover:from-[#27A980] hover:to-[#0BA360] text-white rounded-md font-medium text-sm px-4 py-2 mt-2 mb-2 w-fit"

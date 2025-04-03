@@ -16,12 +16,16 @@ import ProfileBox from "@/components/dashboard/ProfileBox";
 import { getPostFeed } from "@/services/postService";
 import { isAuthenticated, getAuthToken, checkAuthStatus } from "@/utils/auth";
 import { toast } from "react-hot-toast";
+import { API_BASE_URL } from "@/config/api";
 
 const Dashboard = () => {
   const router = useRouter();
   const [posts, setPosts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [userData, setUserData] = useState<any>(null);
+  const [userLoading, setUserLoading] = useState(true);
+  const [userError, setUserError] = useState("");
 
   // Check if user is authenticated
   useEffect(() => {
@@ -44,6 +48,41 @@ const Dashboard = () => {
       // router.push('/sign-up');
     }
   }, [router]);
+
+  // Fetch user data
+  const fetchUserData = async () => {
+    setUserLoading(true);
+    setUserError("");
+
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        setUserError("No authentication token found");
+        setUserLoading(false);
+        return;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/v1/users/me`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch user data: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      setUserData(data.user);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to fetch user data";
+      setUserError(errorMessage);
+      console.error("User data fetch error:", errorMessage);
+    } finally {
+      setUserLoading(false);
+    }
+  };
 
   // Fetch posts when component mounts
   const fetchPosts = async () => {
@@ -71,6 +110,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchPosts();
+    fetchUserData();
   }, []);
 
   // Debug function to check auth status
@@ -120,7 +160,11 @@ const Dashboard = () => {
           {/* Left Column - Only visible on large screens */}
           <div className="hidden lg:block lg:col-span-3 relative">
             <div className="sticky top-24 space-y-4">
-              <Profile_box />
+              <Profile_box
+                userData={userData}
+                isLoading={userLoading}
+                error={userError}
+              />
               <div className="mt-4">
                 <Engagementrate />
               </div>
@@ -192,7 +236,11 @@ const Dashboard = () => {
 
           {/* Mobile Components - Now hidden on all screen sizes */}
           <div className="hidden">
-            <ProfileBox />
+            <ProfileBox
+              userData={userData}
+              isLoading={userLoading}
+              error={userError}
+            />
             <Engagementrate />
             <Partnership />
             <Communities />

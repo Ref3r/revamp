@@ -4,6 +4,9 @@ import Sidebar from "@/components/dashboard/Sidebar";
 import ChatWindow from "@/components/chat-section/chat-window/ChatWindow";
 import Header from "@/components/communities/leaderboard/Header";
 import Leaderboard from "@/components/communities/leaderboard/leaderBoard";
+import axios from "axios";
+import { getAuthToken } from "@/utils/auth";
+import { toast } from "react-hot-toast";
 
 // Define types based on your existing code
 interface Message {
@@ -22,6 +25,15 @@ interface Chat {
   avatar: string;
   lastSeen: string;
   messages: Message[];
+}
+
+interface JoinedCommunity {
+  _id: string;
+  name: string;
+  description: string;
+  image: string;
+  niche: string;
+  memberCount: number;
 }
 
 // Custom ChatWindow wrapper to fix mobile layout issues
@@ -56,6 +68,10 @@ export default function CommunityApp() {
   const [isMobile, setIsMobile] = useState(false);
   const [isSmallScreen, setIsSmallScreen] = useState(false);
   const [showBottomNav, setShowBottomNav] = useState(true);
+  const [joinedCommunities, setJoinedCommunities] = useState<JoinedCommunity[]>(
+    []
+  );
+  const [isLoading, setIsLoading] = useState(false);
 
   // Sample leaderboard users with actual images
   const leaderboardUsers = [
@@ -105,6 +121,36 @@ export default function CommunityApp() {
       medal: "/medal.svg",
     },
   ];
+
+  // Fetch joined communities
+  const fetchJoinedCommunities = async () => {
+    const token = getAuthToken();
+    if (!token) {
+      toast.error("Please login to view your communities");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/communities/user/joined?page=1&limit=10`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.communities) {
+        setJoinedCommunities(response.data.communities);
+      }
+    } catch (error) {
+      console.error("Error fetching joined communities:", error);
+      toast.error("Failed to fetch your communities");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Create sample chat objects for each leaderboard user
   const createChatForUser = (user: any): Chat => {
@@ -157,6 +203,12 @@ export default function CommunityApp() {
     }
   };
 
+  // Function to handle fetching joined communities
+  const handleFetchJoinedCommunities = async () => {
+    await fetchJoinedCommunities();
+    setSelectedCategory("My Communities");
+  };
+
   // Handle window resize for responsive behavior
   useEffect(() => {
     const checkScreenSize = () => {
@@ -181,6 +233,13 @@ export default function CommunityApp() {
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
+  // Fetch joined communities when category changes to "My Communities"
+  useEffect(() => {
+    if (selectedCategory === "My Communities") {
+      fetchJoinedCommunities();
+    }
+  }, [selectedCategory]);
+
   return (
     <div className="flex h-screen overflow-hidden bg-[#0E0E0E] text-white">
       {/* Sidebar - Desktop only with margin */}
@@ -195,6 +254,8 @@ export default function CommunityApp() {
           selectedCategory={selectedCategory}
           setSelectedCategory={setSelectedCategory}
           isMobile={isSmallScreen}
+          onFetchJoinedCommunities={handleFetchJoinedCommunities}
+          isLoading={isLoading}
         />
 
         {/* Content Area */}
@@ -204,9 +265,22 @@ export default function CommunityApp() {
             <div className={`h-full ${isMobile ? "w-full" : "w-[400px]"} py-2`}>
               <Leaderboard
                 selectedCategory={selectedCategory}
-                users={leaderboardUsers}
+                users={
+                  selectedCategory === "My Communities"
+                    ? joinedCommunities.map((community) => ({
+                        id: community._id,
+                        name: community.name,
+                        rank: `${community.memberCount} members`,
+                        community: community.niche,
+                        avatar: community.image || "/community-1.svg",
+                        hasUnread: false,
+                        medal: "/medal.svg",
+                      }))
+                    : leaderboardUsers
+                }
                 onChatSelect={handleChatSelect}
                 isMobile={isSmallScreen}
+                isLoading={isLoading && selectedCategory === "My Communities"}
               />
             </div>
           )}
