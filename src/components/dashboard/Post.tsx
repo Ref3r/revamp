@@ -165,7 +165,7 @@ const Post = ({ post }: PostProps) => {
       <div className="bg-[#1A1919] rounded-[20px] p-4">
         <div className="flex items-center mb-4">
           <Image
-            src={post.author?.profilePicture || "/user-profile-photo.svg"}
+            src={false || "/user-profile-photo.svg"}
             width={42}
             height={42}
             alt="User profile"
@@ -173,7 +173,7 @@ const Post = ({ post }: PostProps) => {
           />
           <div className="ml-4">
             <h1 className="font-medium text-lg text-white">
-              {post.author?._id}
+              {post.author?.name}
             </h1>
             {post.location && (
               <div className="text-sm text-gray-400 flex items-center">
@@ -227,12 +227,12 @@ const Post = ({ post }: PostProps) => {
         {/* Likes count */}
         {likesCount > 0 && (
           <div className="flex items-center mb-3 text-gray-400 text-sm">
-            <Image
+            {/* <Image
               src="/thumbs-up-filled.svg"
               width={16}
               height={16}
               alt="Likes"
-            />
+            /> */}
             <span className="ml-2">{likesCount} likes</span>
           </div>
         )}
@@ -244,7 +244,7 @@ const Post = ({ post }: PostProps) => {
             className="flex items-center bg-transparent hover:bg-[#282828] rounded-lg px-3 py-2"
           >
             <Image
-              src={isLiked ? "/thumbs-up-filled.svg" : "/thumbs-up.svg"}
+              src={isLiked ? "/thumbs-up.svg" : "/thumbs-up.svg"}
               width={22}
               height={22}
               alt="Like"
@@ -328,10 +328,7 @@ const Post = ({ post }: PostProps) => {
               {comments.map((comment) => (
                 <div key={comment._id} className="flex items-start">
                   <Image
-                    src={
-                      comment.author?.profilePicture ||
-                      "/user-profile-photo.svg"
-                    }
+                    src={false || "/user-profile-photo.svg"}
                     width={32}
                     height={32}
                     alt="Commenter profile"

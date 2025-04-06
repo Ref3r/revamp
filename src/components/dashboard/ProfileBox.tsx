@@ -31,7 +31,7 @@ const ProfileBox = ({
 
   // Use default placeholder or user data
   const username = userData?.email?.split("@")[0] || "Parry";
-  const profilePic = userData?.profilePicture || "/profile-photo.svg";
+  const profilePic = "/profile-photo.svg";
   const bio =
     userData?.bio ||
     "Sometimes like to design, sometimes just like to create chaos";

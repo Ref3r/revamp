@@ -61,7 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // and fetch the user's information
           const API_URL =
             process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-          const response = await fetch(`${API_URL}${AUTH_BASE_PATH}/me`, {
+          const response = await fetch(`${API_URL}/api/v1/users/me`, {
             headers: {
               Authorization: `Bearer ${token}`,
             },
