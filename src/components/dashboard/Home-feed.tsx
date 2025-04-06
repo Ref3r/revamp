@@ -7,7 +7,7 @@ import { Button, Input } from "@lemonsqueezy/wedges";
 import { createPost } from "@/services/postService";
 import { toast } from "react-hot-toast";
 import { PlusCircle, ImagePlus, Mic, Settings } from "lucide-react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface HomefeedProps {
 	onPostCreated?: () => void;
@@ -31,6 +31,8 @@ const Homefeed = ({ onPostCreated }: HomefeedProps) => {
 		latitude: number;
 		longitude: number;
 	} | null>(null);
+
+	const queryClient = useQueryClient();
 
 	const mediaRecorderRef = useRef<MediaRecorder | null>(null);
 	const chunksRef = useRef<Blob[]>([]);
@@ -176,6 +178,11 @@ const Homefeed = ({ onPostCreated }: HomefeedProps) => {
 				setCoordinates(null);
 				setVisibility("public");
 				setShowAdvancedOptions(false);
+
+				// Invalidate queries to refresh the post list
+				queryClient.invalidateQueries({
+					queryKey: ["posts"],
+				});
 
 				// Notify parent component that a post was created
 				if (onPostCreated) {
