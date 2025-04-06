@@ -199,61 +199,6 @@ const Homefeed = ({ onPostCreated }: HomefeedProps) => {
 		},
 	});
 
-	// Handle post submission
-	// const handleSubmitPost = async () => {
-	// 	if (!postText.trim()) {
-	// 		toast.error("Please enter some content for your post");
-	// 		return;
-	// 	}
-
-	// 	setIsSubmitting(true);
-
-	// 	// Prepare location data if available
-	// 	const locationData =
-	// 		locationName && coordinates
-	// 			? {
-	// 					name: locationName,
-	// 					coordinates: coordinates,
-	// 			  }
-	// 			: undefined;
-
-	// 	try {
-	// 		const response = await createPost({
-	// 			content: postText,
-	// 			media: uploadedFiles.length > 0 ? uploadedFiles : undefined,
-	// 			tags: tags.length > 0 ? tags : undefined,
-	// 			location: locationData,
-	// 			visibility: visibility,
-	// 		});
-
-	// 		if (response.success) {
-	// 			toast.success("Post created successfully!");
-
-	// 			// Reset form
-	// 			setPostText("");
-	// 			setUploadedFiles([]);
-	// 			setTags([]);
-	// 			setAudioBlob(null);
-	// 			setLocationName("");
-	// 			setCoordinates(null);
-	// 			setVisibility("public");
-	// 			setShowAdvancedOptions(false);
-
-	// 			// Notify parent component that a post was created
-	// 			if (onPostCreated) {
-	// 				onPostCreated();
-	// 			}
-	// 		} else {
-	// 			toast.error(response.message);
-	// 		}
-	// 	} catch (error) {
-	// 		console.error("Error submitting post:", error);
-	// 		toast.error("Failed to create post. Please try again.");
-	// 	} finally {
-	// 		setIsSubmitting(false);
-	// 	}
-	// };
-
 	return (
 		<div className="w-full">
 			<div className="bg-[#1A1919] rounded-[20px] p-4">

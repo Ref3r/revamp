@@ -136,47 +136,6 @@ export default function CommunityApp() {
 		},
 	];
 
-	// Fetch joined communities
-	// const fetchJoinedCommunities = async () => {
-	// 	const token = getAuthToken();
-	// 	if (!token) {
-	// 		toast.error("Please login to view your communities");
-	// 		return;
-	// 	}
-
-	// 	setIsLoading(true);
-	// 	try {
-	// 		const response = await axios.get(
-	// 			`${process.env.NEXT_PUBLIC_API_URL}/api/v1/communities/user/joined?page=1&limit=10`,
-	// 			{
-	// 				headers: {
-	// 					Authorization: `Bearer ${token}`,
-	// 				},
-	// 			}
-	// 		);
-
-	// 		if (response.data.success && response.data.data) {
-	// 			setJoinedCommunities(
-	// 				response.data.data.map((community: any) => ({
-	// 					_id: community._id,
-	// 					name: community.name,
-	// 					description: community.description,
-	// 					image: community.image?.startsWith("http")
-	// 						? "/community-1.svg"
-	// 						: community.image || "/community-1.svg",
-	// 					niche: community.niche,
-	// 					memberCount: community.members?.length || 0,
-	// 				}))
-	// 			);
-	// 		}
-	// 	} catch (error) {
-	// 		console.error("Error fetching joined communities:", error);
-	// 		toast.error("Failed to fetch your communities");
-	// 	} finally {
-	// 		setIsLoading(false);
-	// 	}
-	// };
-
 	const {
 		refetch: fetchJoinedCommunities,
 		data: joinedCommunities,
@@ -325,82 +284,6 @@ export default function CommunityApp() {
 		}
 	};
 
-	// Handle sending a message
-	// const handleSendMessage = async (communityId: string, content: string) => {
-	// 	try {
-	// 		// First, add the message to the UI immediately for better UX
-	// 		if (currentChat) {
-	// 			const now = new Date();
-	// 			const timeString = now.toLocaleTimeString([], {
-	// 				hour: "2-digit",
-	// 				minute: "2-digit",
-	// 			});
-
-	// 			const tempMessage: Message = {
-	// 				id:
-	// 					(currentChat.messages.length > 0
-	// 						? Math.max(...currentChat.messages.map((m) => m.id))
-	// 						: 0) + 1,
-	// 				content: content,
-	// 				sender: "self",
-	// 				timestamp: timeString,
-	// 			};
-
-	// 			const updatedChat = {
-	// 				...currentChat,
-	// 				messages: [...currentChat.messages, tempMessage],
-	// 			};
-
-	// 			setCurrentChat(updatedChat);
-	// 		}
-
-	// 		// Then send the message to the API
-	// 		const response = await sendMessage(communityId, content);
-
-	// 		if (response.success) {
-	// 			// Refresh messages after sending, but preserve the current chat state
-	// 			if (currentChat) {
-	// 				const response = await getMessages(communityId);
-
-	// 				if (response.success) {
-	// 					// Get user ID from token to determine message sender
-	// 					const token = getAuthToken();
-	// 					let userId = "";
-	// 					if (token) {
-	// 						const tokenParts = token.split(".");
-	// 						if (tokenParts.length === 3) {
-	// 							const payload = JSON.parse(atob(tokenParts[1]));
-	// 							userId = payload.userId || payload._id || payload.id || "";
-	// 						}
-	// 					}
-
-	// 					// Convert API messages to UI format
-	// 					const messages = convertApiMessagesToUiFormat(
-	// 						response.data,
-	// 						userId
-	// 					);
-
-	// 					// Create updated chat object
-	// 					const updatedChat = {
-	// 						...currentChat,
-	// 						messages: messages,
-	// 						lastSeen: `${response.data.length} messages`,
-	// 					};
-
-	// 					setCurrentChat(updatedChat);
-
-	// 					// Mark messages as read
-	// 					await markMessagesAsRead(communityId);
-	// 				}
-	// 			}
-	// 		} else {
-	// 			toast.error(response.message || "Failed to send message");
-	// 		}
-	// 	} catch (error) {
-	// 		console.error("Error sending message:", error);
-	// 		toast.error("Failed to send message");
-	// 	}
-	// };
 	const { mutateAsync: handleSendMessage } = useMutation({
 		mutationFn: async ({
 			communityId,

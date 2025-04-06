@@ -90,43 +90,6 @@ const Post = ({ post }: PostProps) => {
 		}
 	}, [currentUserId, post.likes]);
 
-	// Handle like/unlike
-	// const handleLikeToggle = async () => {
-	// 	if (!currentUserId) {
-	// 		toast.error("Please log in to like posts");
-	// 		return;
-	// 	}
-
-	// 	try {
-	// 		if (isLiked) {
-	// 			// Unlike post
-	// 			const response = await unlikePost(post._id);
-	// 			if (response.success) {
-	// 				// Remove current user's ID from likes array
-	// 				post.likes = post.likes.filter((id) => id !== currentUserId);
-	// 				setIsLiked(false);
-	// 				setLikesCount(post.likes.length);
-	// 			} else {
-	// 				toast.error(response.message);
-	// 			}
-	// 		} else {
-	// 			// Like post
-	// 			const response = await likePost(post._id);
-	// 			if (response.success) {
-	// 				// Add current user's ID to likes array
-	// 				post.likes.push(currentUserId);
-	// 				setIsLiked(true);
-	// 				setLikesCount(post.likes.length);
-	// 			} else {
-	// 				toast.error(response.message);
-	// 			}
-	// 		}
-	// 	} catch (error) {
-	// 		console.error("Error toggling like:", error);
-	// 		toast.error("Failed to process your request");
-	// 	}
-	// };
-
 	const { mutate: handleLikeToggle } = useMutation({
 		mutationFn: async () => {
 			if (!currentUserId) {
@@ -153,42 +116,6 @@ const Post = ({ post }: PostProps) => {
 		},
 	});
 
-	// Handle comment submission
-	// const handleCommentSubmit = async () => {
-	// 	if (!commentText.trim()) return;
-
-	// 	setIsSubmittingComment(true);
-
-	// 	try {
-	// 		const response = await commentOnPost(post._id, {
-	// 			content: commentText,
-	// 		});
-
-	// 		if (response.success) {
-	// 			// Add the new comment to local state
-	// 			setComments([
-	// 				...comments,
-	// 				{
-	// 					_id: response.data?._id || `temp-${Date.now()}`,
-	// 					content: commentText,
-	// 					author: {
-	// 						_id: "current-user", // This would be the current user's ID
-	// 						profilePicture: "/user-profile-photo.svg", // This would be the current user's avatar
-	// 					},
-	// 				},
-	// 			]);
-	// 			setCommentText("");
-	// 			toast.success("Comment added");
-	// 		} else {
-	// 			toast.error(response.message);
-	// 		}
-	// 	} catch (error) {
-	// 		console.error("Error adding comment:", error);
-	// 		toast.error("Failed to add comment");
-	// 	} finally {
-	// 		setIsSubmittingComment(false);
-	// 	}
-	// };
 	const {
 		data: comments,
 		isPending: isSubmittingComment,
