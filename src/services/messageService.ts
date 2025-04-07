@@ -1,4 +1,5 @@
-import { getAuthToken } from "@/utils/auth";
+import apiClient from "@/utils/apiClient";
+import { ServiceError } from "@/utils/errors";
 
 // Define types for messages
 export interface Message {
@@ -41,8 +42,6 @@ export interface MarkAsReadResponse {
   message?: string;
 }
 
-// Get API URL from environment
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 const MESSAGE_BASE_PATH = "/api/v1/messages";
 
 /**
@@ -58,43 +57,24 @@ export async function sendMessage(
   attachments?: string[]
 ): Promise<SendMessageResponse> {
   try {
-    const token = getAuthToken();
-    if (!token) {
-      return {
-        success: false,
-        message: "Authentication required",
-      } as SendMessageResponse;
+    console.log("Sending message to community:", communityId);
+
+    const response = await apiClient.post(`/messages/${communityId}`, {
+      content,
+      attachments,
+    });
+
+    if (!response.data.success) {
+      throw new ServiceError(
+        response.data.message || "Failed to send message",
+        response.status
+      );
     }
 
-    const response = await fetch(
-      `${API_URL}${MESSAGE_BASE_PATH}/${communityId}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          content,
-          attachments,
-        }),
-      }
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || "Failed to send message");
-    }
-
-    return data;
+    return response.data;
   } catch (error) {
     console.error("Send message error:", error);
-    return {
-      success: false,
-      message:
-        error instanceof Error ? error.message : "Failed to send message",
-    } as SendMessageResponse;
+    throw error;
   }
 }
 
@@ -111,43 +91,25 @@ export async function getMessages(
   limit: number = 20
 ): Promise<GetMessagesResponse> {
   try {
-    const token = getAuthToken();
-    if (!token) {
-      return {
-        success: false,
-        data: [],
-        pagination: { total: 0, page, limit, pages: 0 },
-        message: "Authentication required",
-      } as GetMessagesResponse;
-    }
-
-    const response = await fetch(
-      `${API_URL}${MESSAGE_BASE_PATH}/${communityId}?page=${page}&limit=${limit}`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      }
+    console.log(
+      `Fetching messages for community ${communityId}, page ${page}, limit ${limit}`
     );
 
-    const data = await response.json();
+    const response = await apiClient.get(`/messages/${communityId}`, {
+      params: { page, limit },
+    });
 
-    if (!response.ok) {
-      throw new Error(data.message || "Failed to get messages");
+    if (!response.data.success) {
+      throw new ServiceError(
+        response.data.message || "Failed to get messages",
+        response.status
+      );
     }
 
-    return data;
+    return response.data;
   } catch (error) {
     console.error("Get messages error:", error);
-    return {
-      success: false,
-      data: [],
-      pagination: { total: 0, page, limit, pages: 0 },
-      message:
-        error instanceof Error ? error.message : "Failed to get messages",
-    } as GetMessagesResponse;
+    throw error;
   }
 }
 
@@ -160,40 +122,20 @@ export async function markMessagesAsRead(
   communityId: string
 ): Promise<MarkAsReadResponse> {
   try {
-    const token = getAuthToken();
-    if (!token) {
-      return {
-        success: false,
-        message: "Authentication required",
-      } as MarkAsReadResponse;
+    console.log("Marking messages as read for community:", communityId);
+
+    const response = await apiClient.post(`/messages/${communityId}/read`);
+
+    if (!response.data.success) {
+      throw new ServiceError(
+        response.data.message || "Failed to mark messages as read",
+        response.status
+      );
     }
 
-    const response = await fetch(
-      `${API_URL}${MESSAGE_BASE_PATH}/${communityId}/read`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || "Failed to mark messages as read");
-    }
-
-    return data;
+    return response.data;
   } catch (error) {
     console.error("Mark as read error:", error);
-    return {
-      success: false,
-      message:
-        error instanceof Error
-          ? error.message
-          : "Failed to mark messages as read",
-    } as MarkAsReadResponse;
+    throw error;
   }
 }

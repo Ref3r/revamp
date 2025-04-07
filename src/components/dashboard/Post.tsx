@@ -1,12 +1,21 @@
+/** @format */
+
 "use client";
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button, Input } from "@lemonsqueezy/wedges";
-import { likePost, unlikePost, commentOnPost } from "@/services/postService";
+import {
+  likePost,
+  unlikePost,
+  commentOnPost,
+  PostResponse,
+} from "@/services/postService";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { getAuthToken } from "@/utils/auth";
+import { useMutation } from "@tanstack/react-query";
+import apiClient from "@/utils/apiClient";
 
 interface PostProps {
   post: {
@@ -16,6 +25,7 @@ interface PostProps {
     author: {
       _id: string;
       profilePicture: string;
+      name: string; // Assuming author has a name
     };
     likes: string[];
     tags: string[];
@@ -36,25 +46,27 @@ interface PostProps {
 const Post = ({ post }: PostProps) => {
   const router = useRouter();
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [comments, setComments] = useState<any[]>(post.comments || []);
 
   // Fetch current user ID on mount
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
-        const token = getAuthToken();
-        if (!token) return;
+        // const token = getAuthToken();
+        // if (!token) return;
 
-        const API_URL = process.env.NEXT_PUBLIC_API_URL;
-        if (!API_URL) return;
+        // const API_URL = process.env.NEXT_PUBLIC_API_URL;
+        // if (!API_URL) return;
 
-        const response = await fetch(`${API_URL}/api/v1/users/me`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        // const response = await fetch(`${API_URL}/api/v1/users/me`, {
+        //   headers: {
+        //     Authorization: `Bearer ${token}`,
+        //   },
+        // });
+        const response = await apiClient.get("/users/me");
 
-        if (response.ok) {
-          const data = await response.json();
+        if (response.status % 100 !== 2) {
+          const data = await response.data;
           setCurrentUserId(data.user._id);
         }
       } catch (error) {
@@ -71,8 +83,8 @@ const Post = ({ post }: PostProps) => {
   const [likesCount, setLikesCount] = useState(post.likes?.length || 0);
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState("");
-  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
-  const [comments, setComments] = useState<any[]>(post.comments || []);
+  // const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  // const [comments, setComments] = useState<any[]>(post.comments || []);
 
   // Update isLiked when currentUserId changes
   useEffect(() => {
@@ -81,58 +93,42 @@ const Post = ({ post }: PostProps) => {
     }
   }, [currentUserId, post.likes]);
 
-  // Handle like/unlike
-  const handleLikeToggle = async () => {
-    if (!currentUserId) {
-      toast.error("Please log in to like posts");
-      return;
-    }
+  const { mutate: handleLikeToggle } = useMutation({
+    mutationFn: async () => {
+      if (!currentUserId) {
+        toast.error("Please log in to like posts");
+        return;
+      }
 
-    try {
       if (isLiked) {
         // Unlike post
-        const response = await unlikePost(post._id);
-        if (response.success) {
-          // Remove current user's ID from likes array
-          post.likes = post.likes.filter((id) => id !== currentUserId);
-          setIsLiked(false);
-          setLikesCount(post.likes.length);
-        } else {
-          toast.error(response.message);
-        }
+        await unlikePost(post._id);
       } else {
         // Like post
-        const response = await likePost(post._id);
-        if (response.success) {
-          // Add current user's ID to likes array
-          post.likes.push(currentUserId);
-          setIsLiked(true);
-          setLikesCount(post.likes.length);
-        } else {
-          toast.error(response.message);
-        }
+        await likePost(post._id);
       }
-    } catch (error) {
+    },
+    onSuccess: () => {
+      // Update local state after successful mutation
+      setIsLiked((prev) => !prev);
+      setLikesCount((prev) => (isLiked ? prev - 1 : prev + 1));
+    },
+    onError: (error) => {
       console.error("Error toggling like:", error);
       toast.error("Failed to process your request");
-    }
-  };
+    },
+  });
 
-  // Handle comment submission
-  const handleCommentSubmit = async () => {
-    if (!commentText.trim()) return;
+  const { isPending: isSubmittingComment, mutate: handleCommentSubmit } =
+    useMutation({
+      mutationFn: async () => {
+        if (!commentText.trim()) return;
 
-    setIsSubmittingComment(true);
+        const response = await commentOnPost(post._id, {
+          content: commentText,
+        });
 
-    try {
-      const response = await commentOnPost(post._id, {
-        content: commentText,
-      });
-
-      if (response.success) {
-        // Add the new comment to local state
         setComments([
-          ...comments,
           {
             _id: response.data?._id || `temp-${Date.now()}`,
             content: commentText,
@@ -141,19 +137,23 @@ const Post = ({ post }: PostProps) => {
               profilePicture: "/user-profile-photo.svg", // This would be the current user's avatar
             },
           },
+          ...comments,
         ]);
+      },
+      onSuccess: () => {
+        // Add the new comment to local state
         setCommentText("");
         toast.success("Comment added");
-      } else {
-        toast.error(response.message);
-      }
-    } catch (error) {
-      console.error("Error adding comment:", error);
-      toast.error("Failed to add comment");
-    } finally {
-      setIsSubmittingComment(false);
-    }
-  };
+      },
+      onError: (error) => {
+        console.error("Error adding comment:", error);
+        toast.error("Failed to add comment");
+      },
+    });
+
+  // useEffect(() => {
+  //   console.log(comments);
+  // }, [comments]);
 
   // Navigate to post detail page
   const handlePostClick = () => {
@@ -240,7 +240,7 @@ const Post = ({ post }: PostProps) => {
         {/* Comment, likes, share buttons */}
         <div className="flex justify-between items-center mb-3">
           <Button
-            onClick={handleLikeToggle}
+            onClick={() => handleLikeToggle()}
             className="flex items-center bg-transparent hover:bg-[#282828] rounded-lg px-3 py-2"
           >
             <Image
@@ -293,7 +293,9 @@ const Post = ({ post }: PostProps) => {
                 <Input
                   type="text"
                   value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
+                  onChange={(e) =>
+                    setCommentText((e.target as HTMLInputElement).value)
+                  }
                   placeholder="Write a comment..."
                   className="w-full bg-[#282828] text-white border-none focus:outline-none rounded-full py-2 pr-12"
                   onKeyDown={(e) => {
@@ -304,7 +306,7 @@ const Post = ({ post }: PostProps) => {
                   }}
                 />
                 <Button
-                  onClick={handleCommentSubmit}
+                  onClick={() => handleCommentSubmit()}
                   disabled={isSubmittingComment || !commentText.trim()}
                   className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-transparent hover:bg-transparent"
                 >
@@ -325,7 +327,7 @@ const Post = ({ post }: PostProps) => {
 
             {/* Comments list */}
             <div className="space-y-4">
-              {comments.map((comment) => (
+              {comments.map((comment: any) => (
                 <div key={comment._id} className="flex items-start">
                   <Image
                     src={false || "/user-profile-photo.svg"}

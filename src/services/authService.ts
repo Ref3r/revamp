@@ -1,5 +1,7 @@
 // src/services/authService.ts
 
+import apiClient from "@/utils/apiClient";
+
 // Define the types for authentication payloads and responses
 export interface LoginPayload {
   email: string;
@@ -48,21 +50,28 @@ export async function loginUser(
 ): Promise<AuthResponse> {
   try {
     console.log("Attempting login for email:", credentials.email);
-    console.log("Connecting to:", `${API_URL}${AUTH_BASE_PATH}/login`);
+    console.log("Connecting to:", `${API_URL}/auth/login`);
 
-    const response = await fetch(`${API_URL}${AUTH_BASE_PATH}/login`, {
-      method: "POST",
+    // const response = await fetch(`${API_URL}${AUTH_BASE_PATH}/login`, {
+    //   method: "POST",
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //     Accept: "application/json",
+    //   },
+    //   body: JSON.stringify(credentials),
+    // });
+
+    const response = await apiClient.post(`/auth/login`, credentials, {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
       },
-      body: JSON.stringify(credentials),
     });
 
-    const data = await response.json();
+    const data = await response.data;
     console.log("Login response status:", response.status);
 
-    if (!response.ok) {
+    if (response.status !== 200) {
       console.error("Login failed:", data.message);
       throw new Error(data.message || "Login failed");
     }

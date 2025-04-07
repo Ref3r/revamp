@@ -22,6 +22,7 @@ import {
   AuthResponse,
 } from "@/services/authService";
 import { useRouter } from "next/navigation";
+import apiClient from "@/utils/apiClient";
 
 // Base API path for auth endpoints
 const AUTH_BASE_PATH = "/api/v1/auth";
@@ -59,16 +60,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (token) {
           // Here you would typically validate the token with your backend
           // and fetch the user's information
-          const API_URL =
-            process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-          const response = await fetch(`${API_URL}/api/v1/users/me`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
+          // const API_URL =
+          //   process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+          // const response = await fetch(`${API_URL}/users/me`, {
+          //   headers: {
+          //     Authorization: `Bearer ${token}`,
+          //   },
+          // });
+          const response = await apiClient.get("/users/me");
 
-          if (response.ok) {
-            const userData = await response.json();
+          if (response.status === 200) {
+            const userData = await response.data;
             setUser(userData);
           } else {
             // If token is invalid, remove it

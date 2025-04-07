@@ -1,3 +1,5 @@
+/** @format */
+
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -13,19 +15,21 @@ import WalletBalance from "@/components/dashboard/WalletBalance";
 import RecentContests from "@/components/dashboard/RecentContests";
 import DashboardMenu from "@/components/dashboard/DashboardMenu";
 import ProfileBox from "@/components/dashboard/ProfileBox";
-import { getPostFeed } from "@/services/postService";
+import { getPostFeed, PostResponse } from "@/services/postService";
 import { isAuthenticated, getAuthToken, checkAuthStatus } from "@/utils/auth";
 import { toast } from "react-hot-toast";
 import { API_BASE_URL } from "@/config/api";
+import { useQuery } from "@tanstack/react-query";
+import apiClient from "@/utils/apiClient";
 
 const Dashboard = () => {
   const router = useRouter();
-  const [posts, setPosts] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [userData, setUserData] = useState<any>(null);
-  const [userLoading, setUserLoading] = useState(true);
-  const [userError, setUserError] = useState("");
+  // const [posts, setPosts] = useState<any[]>([]);
+  // const [isLoading, setIsLoading] = useState(true);
+  // const [error, setError] = useState("");
+  // const [userData, setUserData] = useState<any>(null);
+  // const [userLoading, setUserLoading] = useState(true);
+  // const [userError, setUserError] = useState("");
 
   // Check if user is authenticated
   useEffect(() => {
@@ -45,73 +49,49 @@ const Dashboard = () => {
       // For development, we'll just show a toast but allow access
       // In production, uncomment the router.push line to force login
       toast.error("You're not logged in. Using development mode.");
-      // router.push('/sign-up');
+      router.push("/sign-up");
     }
   }, [router]);
 
-  // Fetch user data
-  const fetchUserData = async () => {
-    setUserLoading(true);
-    setUserError("");
+  const {
+    refetch: fetchPosts,
+    data: posts,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["posts"],
+    queryFn: () => getPostFeed(),
+  });
 
-    try {
+  const {
+    data: userData,
+    isLoading: userLoading,
+    error: userError,
+  } = useQuery({
+    queryKey: ["userData"],
+    queryFn: async () => {
       const token = getAuthToken();
       if (!token) {
-        setUserError("No authentication token found");
-        setUserLoading(false);
-        return;
+        throw new Error("No authentication token found");
       }
 
-      const response = await fetch(`${API_BASE_URL}/api/v1/users/me`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      // const response = await fetch(`${API_BASE_URL}/users/me`, {
+      //   headers: {
+      //     Authorization: `Bearer ${token}`,
+      //   },
+      // });
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch user data: ${response.statusText}`);
+      const response = await apiClient.get("/users/me");
+
+      if (response.status !== 200) {
+        router.push("/sign-up");
+        toast.error("Failed to fetch user data");
       }
 
-      const data = await response.json();
-      setUserData(data.user);
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Failed to fetch user data";
-      setUserError(errorMessage);
-      console.error("User data fetch error:", errorMessage);
-    } finally {
-      setUserLoading(false);
-    }
-  };
-
-  // Fetch posts when component mounts
-  const fetchPosts = async () => {
-    setIsLoading(true);
-    setError("");
-
-    try {
-      const response = await getPostFeed();
-
-      if (response.success) {
-        setPosts(response.data || []);
-      } else {
-        setError(response.message);
-        toast.error(response.message);
-      }
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Failed to fetch posts";
-      setError(errorMessage);
-      toast.error(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchPosts();
-    fetchUserData();
-  }, []);
+      const data = await response.data;
+      return data.user;
+    },
+  });
 
   // Debug function to check auth status
   const handleCheckAuth = () => {
@@ -122,6 +102,38 @@ const Dashboard = () => {
       toast.error("Not authenticated. Check console for details.");
     }
   };
+
+  if (isLoading || userLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[#1A1919]">
+        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-green-500"></div>
+      </div>
+    );
+  }
+
+  // if (isError) {
+  // 	return (
+  // 		<div className="flex items-center justify-center min-h-screen">
+  // 			<p className="text-red-500">{error.message}</p>
+  // 		</div>
+  // 	);
+  // }
+
+  if (!posts) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-red-500">No posts</p>
+      </div>
+    );
+  }
+
+  // if (!userData) {
+  // 	return (
+  // 		<div className="flex items-center justify-center min-h-screen">
+  // 			<p className="text-red-500">No user data found.</p>
+  // 		</div>
+  // 	);
+  // }
 
   return (
     <div className="bg-[#0E0E0E] min-h-screen">
@@ -163,7 +175,7 @@ const Dashboard = () => {
               <Profile_box
                 userData={userData}
                 isLoading={userLoading}
-                error={userError}
+                error={userError?.message}
               />
               <div className="mt-4">
                 <Engagementrate />
@@ -193,16 +205,18 @@ const Dashboard = () => {
                 </div>
               ) : error ? (
                 <div className="bg-[#1A1919] rounded-[20px] p-6 text-center">
-                  <p className="text-red-400">{error}</p>
+                  <p className="text-red-400">{error.message}</p>
                   <button
-                    onClick={fetchPosts}
+                    onClick={() => fetchPosts()}
                     className="mt-4 bg-[#282828] text-white px-4 py-2 rounded-lg hover:bg-[#383838]"
                   >
                     Retry
                   </button>
                 </div>
-              ) : posts.length > 0 ? (
-                posts.map((post) => <Post key={post._id} post={post} />)
+              ) : posts.data && posts!.data.length > 0 ? (
+                posts!.data.map((post: any) => (
+                  <Post key={post._id} post={post} />
+                ))
               ) : (
                 <div className="bg-[#1A1919] rounded-[20px] p-6 text-center">
                   <p className="text-white mb-4">
@@ -239,7 +253,7 @@ const Dashboard = () => {
             <ProfileBox
               userData={userData}
               isLoading={userLoading}
-              error={userError}
+              error={userError?.message}
             />
             <Engagementrate />
             <Partnership />

@@ -1,4 +1,7 @@
 import { getAuthToken } from "@/utils/auth";
+import axios from "axios";
+import { ServiceError } from "@/utils/errors";
+import apiClient from "@/utils/apiClient";
 
 // Use the Next.js app URL for API calls
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
@@ -40,186 +43,79 @@ export const createPost = async (
   postData: CreatePostData
 ): Promise<PostResponse> => {
   try {
-    const token = getAuthToken();
-    if (!token) {
-      return {
-        success: false,
-        message: "Authentication required",
-      };
-    }
-
-    const API_URL = process.env.NEXT_PUBLIC_API_URL;
-    if (!API_URL) {
-      throw new Error("API URL not configured");
-    }
-
     console.log("Creating post with data:", postData);
-    console.log("Create post URL:", `${API_URL}/api/v1/posts`);
 
-    const response = await fetch(`${API_URL}/api/v1/posts`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(postData),
-    });
+    const response = await apiClient.post("/posts", postData);
 
-    // Try to parse JSON, but handle non-JSON responses
-    let data;
-    const contentType = response.headers.get("content-type");
-    if (contentType && contentType.includes("application/json")) {
-      data = await response.json();
-    } else {
-      const text = await response.text();
-      console.error("Non-JSON response:", text);
-      throw new Error("Server returned non-JSON response");
-    }
-
-    if (!response.ok) {
-      return {
-        success: false,
-        message: data.message || "Failed to create post",
-      };
+    if (response.status !== 201) {
+      throw new ServiceError(
+        response.data.message || "Failed to create post",
+        response.status
+      );
     }
 
     return {
       success: true,
       message: "Post created successfully",
-      data: data,
+      data: response.data,
     };
   } catch (error) {
     console.error("Error creating post:", error);
-    return {
-      success: false,
-      message:
-        error instanceof Error ? error.message : "An unexpected error occurred",
-    };
+    throw error;
   }
 };
 
 // Like a post
 export const likePost = async (postId: string): Promise<PostResponse> => {
   try {
-    const token = getAuthToken();
-    if (!token) {
-      return {
-        success: false,
-        message: "Authentication required",
-      };
-    }
-
-    const API_URL = process.env.NEXT_PUBLIC_API_URL;
-    if (!API_URL) {
-      throw new Error("API URL not configured");
-    }
-
     console.log("Liking post with ID:", postId);
-    console.log("Like request URL:", `${API_URL}/api/v1/posts/${postId}/like`);
 
-    const response = await fetch(`${API_URL}/api/v1/posts/${postId}/like`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({}),
-    });
+    const response = await apiClient.post(`/posts/${postId}/like`);
 
-    // Try to parse JSON, but handle non-JSON responses
-    let data;
-    const contentType = response.headers.get("content-type");
-    if (contentType && contentType.includes("application/json")) {
-      data = await response.json();
-    } else {
-      const text = await response.text();
-      console.error("Non-JSON response:", text);
-      throw new Error("Server returned non-JSON response");
-    }
+    console.log(response);
 
-    if (!response.ok) {
-      return {
-        success: false,
-        message: data.message || "Failed to like post",
-      };
+    if (response.status !== 200) {
+      throw new ServiceError(
+        response.data.message || "Failed to like post",
+        response.status
+      );
     }
 
     return {
       success: true,
       message: "Post liked successfully",
-      data: data,
+      data: response.data,
     };
   } catch (error) {
     console.error("Error liking post:", error);
-    return {
-      success: false,
-      message:
-        error instanceof Error ? error.message : "An unexpected error occurred",
-    };
+    throw error;
   }
 };
 
 // Unlike a post
 export const unlikePost = async (postId: string): Promise<PostResponse> => {
   try {
-    const token = getAuthToken();
-    if (!token) {
-      return {
-        success: false,
-        message: "Authentication required",
-      };
-    }
-
-    const API_URL = process.env.NEXT_PUBLIC_API_URL;
-    if (!API_URL) {
-      throw new Error("API URL not configured");
-    }
-
     console.log("Unliking post with ID:", postId);
-    console.log(
-      "Unlike request URL:",
-      `${API_URL}/api/v1/posts/${postId}/unlike`
-    );
 
-    const response = await fetch(`${API_URL}/api/v1/posts/${postId}/unlike`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({}),
-    });
+    const response = await apiClient.post(`/posts/${postId}/unlike`);
 
-    // Try to parse JSON, but handle non-JSON responses
-    let data;
-    const contentType = response.headers.get("content-type");
-    if (contentType && contentType.includes("application/json")) {
-      data = await response.json();
-    } else {
-      const text = await response.text();
-      console.error("Non-JSON response:", text);
-      throw new Error("Server returned non-JSON response");
-    }
+    console.log(response);
 
-    if (!response.ok) {
-      return {
-        success: false,
-        message: data.message || "Failed to unlike post",
-      };
+    if (response.status !== 200) {
+      throw new ServiceError(
+        response.data.message || "Failed to unlike post",
+        response.status
+      );
     }
 
     return {
       success: true,
       message: "Post unliked successfully",
-      data: data,
+      data: response.data,
     };
   } catch (error) {
     console.error("Error unliking post:", error);
-    return {
-      success: false,
-      message:
-        error instanceof Error ? error.message : "An unexpected error occurred",
-    };
+    throw error;
   }
 };
 
@@ -229,65 +125,31 @@ export const commentOnPost = async (
   commentData: CommentData
 ): Promise<PostResponse> => {
   try {
-    const token = getAuthToken();
-    if (!token) {
-      return {
-        success: false,
-        message: "Authentication required",
-      };
-    }
-
-    const API_URL = process.env.NEXT_PUBLIC_API_URL;
-    if (!API_URL) {
-      throw new Error("API URL not configured");
-    }
-
     console.log("Commenting on post with ID:", postId);
-    console.log(
-      "Comment request URL:",
-      `${API_URL}/api/v1/posts/${postId}/comments`
-    );
     console.log("Comment data:", commentData);
 
-    const response = await fetch(`${API_URL}/api/v1/posts/${postId}/comments`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(commentData),
-    });
+    const response = await apiClient.post(
+      `/posts/${postId}/comments`,
+      commentData
+    );
 
-    // Try to parse JSON, but handle non-JSON responses
-    let data;
-    const contentType = response.headers.get("content-type");
-    if (contentType && contentType.includes("application/json")) {
-      data = await response.json();
-    } else {
-      const text = await response.text();
-      console.error("Non-JSON response:", text);
-      throw new Error("Server returned non-JSON response");
-    }
+    console.log(response);
 
-    if (!response.ok) {
-      return {
-        success: false,
-        message: data.message || "Failed to add comment",
-      };
+    if (response.status !== 201) {
+      throw new ServiceError(
+        response.data.message || "Failed to add comment",
+        response.status
+      );
     }
 
     return {
       success: true,
       message: "Comment added successfully",
-      data: data,
+      data: response.data,
     };
   } catch (error) {
     console.error("Error commenting on post:", error);
-    return {
-      success: false,
-      message:
-        error instanceof Error ? error.message : "An unexpected error occurred",
-    };
+    throw error;
   }
 };
 
@@ -297,124 +159,59 @@ export const getPostFeed = async (
   limit: number = 10
 ): Promise<PostResponse> => {
   try {
-    const token = getAuthToken();
-    if (!token) {
-      return {
-        success: false,
-        message: "Authentication required",
-      };
-    }
+    console.log(`Fetching posts for page ${page} with limit ${limit}`);
 
-    const API_URL = process.env.NEXT_PUBLIC_API_URL;
-    if (!API_URL) {
-      throw new Error("API URL not configured");
-    }
+    const response = await apiClient.get(`/posts/timeline`, {
+      params: { page, limit },
+    });
 
-    console.log(
-      "Fetching posts from:",
-      `${API_URL}/api/v1/posts/timeline?page=${page}&limit=${limit}`
-    );
+    console.log(response);
 
-    const response = await fetch(
-      `${API_URL}/api/v1/posts/timeline?page=${page}&limit=${limit}`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    const data = await response.json();
-    console.log("Post API response:", data);
-
-    if (!response.ok) {
-      console.error("Failed to fetch posts:", response.status, data);
-      return {
-        success: false,
-        message: data.message || "Failed to fetch posts",
-      };
+    if (response.status !== 200) {
+      throw new ServiceError(
+        response.data.message || "Failed to fetch posts",
+        response.status
+      );
     }
 
     return {
       success: true,
       message: "Posts retrieved successfully",
-      data: data.posts || [], // Extract posts array from the response
+      data: response.data.posts || [],
       pagination: {
-        totalCount: data.totalCount || 0,
-        page: data.page || 1,
-        limit: data.limit || 10,
-        totalPages: data.totalPages || 1,
+        totalCount: response.data.totalCount || 0,
+        page: response.data.page || 1,
+        limit: response.data.limit || 10,
+        totalPages: response.data.totalPages || 1,
       },
     };
   } catch (error) {
     console.error("Error fetching posts:", error);
-    return {
-      success: false,
-      message:
-        error instanceof Error ? error.message : "An unexpected error occurred",
-    };
+    throw error;
   }
 };
 
 // Get post by ID
 export const getPostById = async (postId: string): Promise<PostResponse> => {
   try {
-    const token = getAuthToken();
-    if (!token) {
-      return {
-        success: false,
-        message: "Authentication required",
-      };
-    }
-
-    const API_URL = process.env.NEXT_PUBLIC_API_URL;
-    if (!API_URL) {
-      throw new Error("API URL not configured");
-    }
-
     console.log("Fetching post with ID:", postId);
-    console.log("Get post URL:", `${API_URL}/api/v1/posts/${postId}`);
 
-    const response = await fetch(`${API_URL}/api/v1/posts/${postId}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await apiClient.get(`/posts/${postId}`);
 
-    // Try to parse JSON, but handle non-JSON responses
-    let data;
-    const contentType = response.headers.get("content-type");
-    if (contentType && contentType.includes("application/json")) {
-      data = await response.json();
-    } else {
-      const text = await response.text();
-      console.error("Non-JSON response:", text);
-      throw new Error("Server returned non-JSON response");
-    }
-
-    if (!response.ok) {
-      console.error("Failed to fetch post:", response.status, data);
-      return {
-        success: false,
-        message: data.message || "Failed to fetch post",
-      };
+    if (!response.data.success) {
+      throw new ServiceError(
+        response.data.message || "Failed to fetch post",
+        response.status
+      );
     }
 
     return {
       success: true,
       message: "Post retrieved successfully",
-      data: data,
+      data: response.data,
     };
   } catch (error) {
     console.error("Error fetching post:", error);
-    return {
-      success: false,
-      message:
-        error instanceof Error ? error.message : "An unexpected error occurred",
-    };
+    throw error;
   }
 };
