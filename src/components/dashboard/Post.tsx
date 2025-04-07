@@ -15,6 +15,7 @@ import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { getAuthToken } from "@/utils/auth";
 import { useMutation } from "@tanstack/react-query";
+import apiClient from "@/utils/apiClient";
 
 interface PostProps {
   post: {
@@ -51,20 +52,21 @@ const Post = ({ post }: PostProps) => {
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
-        const token = getAuthToken();
-        if (!token) return;
+        // const token = getAuthToken();
+        // if (!token) return;
 
-        const API_URL = process.env.NEXT_PUBLIC_API_URL;
-        if (!API_URL) return;
+        // const API_URL = process.env.NEXT_PUBLIC_API_URL;
+        // if (!API_URL) return;
 
-        const response = await fetch(`${API_URL}/api/v1/users/me`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        // const response = await fetch(`${API_URL}/api/v1/users/me`, {
+        //   headers: {
+        //     Authorization: `Bearer ${token}`,
+        //   },
+        // });
+        const response = await apiClient.get("/users/me");
 
-        if (response.ok) {
-          const data = await response.json();
+        if (response.status % 100 !== 2) {
+          const data = await response.data;
           setCurrentUserId(data.user._id);
         }
       } catch (error) {
@@ -127,7 +129,6 @@ const Post = ({ post }: PostProps) => {
         });
 
         setComments([
-          ...comments,
           {
             _id: response.data?._id || `temp-${Date.now()}`,
             content: commentText,
@@ -136,6 +137,7 @@ const Post = ({ post }: PostProps) => {
               profilePicture: "/user-profile-photo.svg", // This would be the current user's avatar
             },
           },
+          ...comments,
         ]);
       },
       onSuccess: () => {
@@ -149,9 +151,9 @@ const Post = ({ post }: PostProps) => {
       },
     });
 
-  useEffect(() => {
-    console.log(comments);
-  }, [comments]);
+  // useEffect(() => {
+  //   console.log(comments);
+  // }, [comments]);
 
   // Navigate to post detail page
   const handlePostClick = () => {

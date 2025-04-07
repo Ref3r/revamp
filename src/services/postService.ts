@@ -47,7 +47,7 @@ export const createPost = async (
 
     const response = await apiClient.post("/posts", postData);
 
-    if (!response.data.success) {
+    if (response.status !== 201) {
       throw new ServiceError(
         response.data.message || "Failed to create post",
         response.status
@@ -72,7 +72,9 @@ export const likePost = async (postId: string): Promise<PostResponse> => {
 
     const response = await apiClient.post(`/posts/${postId}/like`);
 
-    if (!response.data.success) {
+    console.log(response);
+
+    if (response.status !== 200) {
       throw new ServiceError(
         response.data.message || "Failed to like post",
         response.status
@@ -97,7 +99,9 @@ export const unlikePost = async (postId: string): Promise<PostResponse> => {
 
     const response = await apiClient.post(`/posts/${postId}/unlike`);
 
-    if (!response.data.success) {
+    console.log(response);
+
+    if (response.status !== 200) {
       throw new ServiceError(
         response.data.message || "Failed to unlike post",
         response.status
@@ -129,7 +133,9 @@ export const commentOnPost = async (
       commentData
     );
 
-    if (!response.data.success) {
+    console.log(response);
+
+    if (response.status !== 201) {
       throw new ServiceError(
         response.data.message || "Failed to add comment",
         response.status
@@ -159,7 +165,9 @@ export const getPostFeed = async (
       params: { page, limit },
     });
 
-    if (!response.data.success) {
+    console.log(response);
+
+    if (response.status !== 200) {
       throw new ServiceError(
         response.data.message || "Failed to fetch posts",
         response.status
