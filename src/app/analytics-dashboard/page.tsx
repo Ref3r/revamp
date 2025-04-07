@@ -5,7 +5,7 @@ import Data from "@/components/analytics-dashboard/Data";
 import AgeSegmentation from "@/components/analytics-dashboard/Age-segmentation";
 import Leaderboard from "@/components/analytics-dashboard/Leaderboard";
 import Sidebar from "@/components/dashboard/Sidebar";
-import FollowerCharts from "@/components/public-view-dashboard/Follower-chart";
+import FollowerCharts from "@/components/public-view-dashboard/PartnershipsSection";
 
 const Page = () => {
   return (

@@ -12,30 +12,30 @@ const CreatorGrid = () => {
   const creators: CreatorType[] = [
     // First row
     { id: 1, title: '', imageUrl: '', row: 1 },
-    { id: 2, title: 'Content Creators', imageUrl: '/unsplash_4bL8yZ8-qQU.svg', row: 1 },
-    { id: 3, title: 'Musicians', imageUrl: '/unsplash_4bL8yZ8-qQU (1).svg', row: 1 },
-    { id: 4, title: 'Designers', imageUrl: '/unsplash_4bL8yZ8-qQU (2).svg', row: 1 },
-    { id: 5, title: 'Fashion Designers', imageUrl: '/unsplash_4bL8yZ8-qQU (3).svg', row: 1 },
-    { id: 6, title: 'Copywriters', imageUrl: '/unsplash_4bL8yZ8-qQU (4).svg', row: 1 },
+    { id: 2, title: 'Content Creators', imageUrl: '/skill-icons_instagram.svg', row: 1 },
+    { id: 3, title: 'Musicians', imageUrl: '/logos_facebook.svg', row: 1 },
+    { id: 4, title: 'Designers', imageUrl: '/bi_twitter-x.svg', row: 1 },
+    { id: 5, title: 'Fashion Designers', imageUrl: '/logos_tiktok-icon.svg', row: 1 },
+    { id: 6, title: 'Copywriters', imageUrl: '/logos_reddit-icon.svg', row: 1 },
     { id: 7, title: '', imageUrl: '', row: 1 },
     
-    // Second row
+    // Second row (shifted right)
     { id: 8, title: '', imageUrl: '', row: 2 },
-    { id: 9, title: 'Devs', imageUrl: '/unsplash_4bL8yZ8-qQU (5).svg', row: 2 },
-    { id: 10, title: 'Architects', imageUrl: '/unsplash_4bL8yZ8-qQU (6).svg', row: 2 },
-    { id: 11, title: 'Influencers', imageUrl: '/unsplash_4bL8yZ8-qQU (7).svg', row: 2 },
-    { id: 12, title: 'Artists', imageUrl: '/unsplash_4bL8yZ8-qQU (8).svg', row: 2 },
+    { id: 9, title: 'Devs', imageUrl: '/logos_youtube-icon.svg', row: 2 },
+    { id: 10, title: 'Architects', imageUrl: '/devicon_linkedin.svg', row: 2 },
+    { id: 11, title: 'Influencers', imageUrl: '/simple-icons_threads.svg', row: 2 },
+    { id: 12, title: 'Artists', imageUrl: '/logos_pinterest.svg', row: 2 },
     { id: 13, title: '', imageUrl: '', row: 2 },
     { id: 14, title: '', imageUrl: '', row: 2 },
     
-    // Third row
+    // Third row remains the same
     ...Array(7).fill(null).map((_, index) => ({
       id: 15 + index,
       title: '',
       imageUrl: '',
       row: 3 as const
     }))
-  ];
+];
 
   const getCardStyle = (row: number) => {
     const styles = {
@@ -52,13 +52,13 @@ const CreatorGrid = () => {
       ${title ? 'hover:bg-opacity-90' : ''}`}
     >
       {title && (
-        <div className="absolute inset-0 p-2 sm:p-3 md:p-4 flex flex-col">
-          <p className="text-white text-xs sm:text-sm font-medium mb-1 sm:mb-2">{title}</p>
-          <div className="relative flex-grow mt-auto">
+        <div className="absolute inset-0 p-2 sm:p-3 md:p-4 flex items-center justify-center">
+          <div className="relative">
             <Image
               src={imageUrl}
               alt={title}
-              fill
+              height={60}
+              width={60}
               className="rounded-xl sm:rounded-2xl object-cover"
             />
           </div>
@@ -104,16 +104,24 @@ const CreatorGrid = () => {
             bg-gradient-to-l from-[#0E0E0E] to-transparent z-10" />
           
           {/* Grid */}
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-2 sm:gap-3 md:gap-4 relative">
-            {creators.map((creator) => (
-              <CreatorCard
-                key={creator.id}
-                title={creator.title}
-                imageUrl={creator.imageUrl}
-                row={creator.row}
-              />
-            ))}
-          </div>
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 
+  gap-2 sm:gap-3 md:gap-4 relative 
+  [&>*:nth-child(8)]:translate-x-[25%] 
+  [&>*:nth-child(9)]:translate-x-[25%] 
+  [&>*:nth-child(10)]:translate-x-[25%] 
+  [&>*:nth-child(11)]:translate-x-[25%] 
+  [&>*:nth-child(12)]:translate-x-[25%] 
+  [&>*:nth-child(13)]:translate-x-[25%] 
+  [&>*:nth-child(14)]:translate-x-[25%]">
+  {creators.map((creator) => (
+    <CreatorCard
+      key={creator.id}
+      title={creator.title}
+      imageUrl={creator.imageUrl}
+      row={creator.row}
+    />
+  ))}
+</div>
         </div>
       </div>
     </div>
