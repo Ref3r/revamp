@@ -1,33 +1,31 @@
-// 1. Main Dashboard Page
-// pages/index.jsx
-'use client'
+"use client";
 
-import ProfileBox from '@/components/dashboard/ProfileBox';
-import StatsSection from '@/components/public-view-dashboard/StatsSection';
-import PartnershipsSection from '@/components/public-view-dashboard/PartnershipsSection';
-import ProfileSection from '@/components/public-view-dashboard/ProfileSection';
-import ContentHighlights from '@/components/public-view-dashboard/ContentHighlights';
-import React from 'react';
-
+import React from "react";
+import ProfileSection from "@/components/public-view-dashboard/ProfileSection";
+import StatsSection from "@/components/public-view-dashboard/StatsSection";
+import PartnershipsSection from "@/components/public-view-dashboard/PartnershipsSection";
+import ContentHighlights from "@/components/public-view-dashboard/ContentHighlights";
 
 export default function Dashboard() {
   return (
-    <div className="min-h-screen bg-[#0E0E0E] text-white p-4">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Top Section: Profile, Stats, and Partnerships in one row */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-          {/* Profile Section - 4 columns */}
-          <ProfileSection />
-          
-          {/* Stats Section - 4 columns */}
-          <StatsSection />
-          
-          {/* Partnerships Section - 4 columns */}
-          <PartnershipsSection />
+    <div className="h-screen bg-[#0E0E0E] text-white p-4 flex flex-col overflow-hidden">
+      <div className="max-w-7xl mx-auto w-full h-full flex flex-col">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-1/3 mb-4">
+          <div className="lg:col-span-4 h-full overflow-hidden">
+            <ProfileSection />
+          </div>
+          <div className="lg:col-span-4 h-full overflow-hidden">
+            <StatsSection />
+          </div>
+
+          <div className="lg:col-span-4 h-full overflow-hidden">
+            <PartnershipsSection />
+          </div>
         </div>
-        
-        {/* Content Highlights */}
-        <ContentHighlights />
+
+        <div className="flex-1 overflow-hidden">
+          <ContentHighlights />
+        </div>
       </div>
     </div>
   );

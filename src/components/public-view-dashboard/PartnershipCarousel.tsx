@@ -1,4 +1,3 @@
-// 2. PartnershipCarousel.jsx
 "use client";
 
 import React, { useState } from "react";
@@ -33,20 +32,20 @@ export default function PartnershipCarousel({
   const currentPartner = partnersList[currentIndex];
 
   if (!partnersList.length) {
-    return <div className="text-center py-4">No partnerships yet</div>;
+    return <div className="text-center py-2">No partnerships yet</div>;
   }
 
   return (
-    <div className="relative">
-      <div className="flex justify-center items-center h-24">
+    <div className="relative w-full h-full flex items-center">
+      <div className="flex justify-center items-center w-full">
         <div className="flex flex-col items-center">
-          <div className="w-16 h-16 relative">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 relative">
             <Image
               src={currentPartner.logoSrc}
               alt={currentPartner.name}
               className="rounded-full"
-              width={100}
-              height={100}
+              width={64}
+              height={64}
               onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
                 const img = e.currentTarget;
                 img.onerror = null;
@@ -54,19 +53,19 @@ export default function PartnershipCarousel({
               }}
             />
           </div>
-          <span className="text-sm mt-1">{currentPartner.name}</span>
+          <span className="text-xs sm:text-sm mt-1">{currentPartner.name}</span>
         </div>
       </div>
 
       <button
         onClick={handlePrevClick}
-        className="absolute left-0 top-1/2 -translate-y-1/2 text-[#B9B9B9] hover:text-white w-8 h-8 flex items-center justify-center cursor-pointer"
+        className="absolute left-0 top-1/2 -translate-y-1/2 text-[#B9B9B9] hover:text-white w-6 h-6 flex items-center justify-center cursor-pointer"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
           fill="currentColor"
-          className="w-6 h-6"
+          className="w-4 h-4 sm:w-6 sm:h-6"
         >
           <path
             fillRule="evenodd"
@@ -77,13 +76,13 @@ export default function PartnershipCarousel({
 
       <button
         onClick={handleNextClick}
-        className="absolute right-0 top-1/2 -translate-y-1/2 text-[#B9B9B9] hover:text-white w-8 h-8 flex items-center justify-center cursor-pointer"
+        className="absolute right-0 top-1/2 -translate-y-1/2 text-[#B9B9B9] hover:text-white w-6 h-6 flex items-center justify-center cursor-pointer"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
           fill="currentColor"
-          className="w-6 h-6"
+          className="w-4 h-4 sm:w-6 sm:h-6"
         >
           <path
             fillRule="evenodd"
@@ -92,8 +91,8 @@ export default function PartnershipCarousel({
         </svg>
       </button>
 
-      <div className="flex justify-center mt-2 gap-1">
-        {partnersList.map((_: any, index: number) => (
+      <div className="absolute bottom-0 left-0 right-0 flex justify-center gap-1">
+        {partnersList.map((_, index) => (
           <button
             key={index}
             onClick={() => setCurrentIndex(index)}
