@@ -12,9 +12,11 @@ export default function PartnershipsSection() {
   ];
 
   return (
-    <div className="lg:col-span-4 bg-[#1A191999] rounded-xl p-4">
-      <div className="text-sm text-gray-300 mb-3">Recent Partnerships</div>
-      <PartnershipCarousel partners={partners} />
+    <div className="h-full bg-[#1A191999] rounded-xl p-3 flex flex-col">
+      <div className="text-sm text-gray-300 mb-2">Recent Partnerships</div>
+      <div className="flex-1 flex items-center">
+        <PartnershipCarousel partners={partners} />
+      </div>
     </div>
   );
 }

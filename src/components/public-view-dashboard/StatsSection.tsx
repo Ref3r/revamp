@@ -27,7 +27,7 @@ export default function StatsSection() {
   ];
 
   return (
-    <div className="lg:col-span-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div className="h-full grid grid-cols-1 sm:grid-cols-2 gap-2">
       {stats.map((stat, index) => (
         <StatCard
           key={index}

@@ -1,40 +1,32 @@
-/**
- * @param {Object} props
- * @param {string} props.tweetId
- * @returns {JSX.Element}
- */ /**
- * @typedef {Object} YouTubeItem
- * @property {number} id
- * @property {string} title
- * @property {string} videoId
- * @property {string} duration
- */
-
-/**
- * @typedef {Object} InstagramReel
- * @property {number} id
- * @property {string} username
- * @property {string} videoUrl
- * @property {string} thumbnailImage
- * @property {string} caption
- * @property {boolean} verified
- */
-
-/**
-
- * @returns {JSX.Element} 
- */ "use client";
+"use client";
 
 import React, { useState, useEffect, useRef } from "react";
 import YouTube from "react-youtube";
 
+declare global {
+  interface Window {
+    twttr: any;
+  }
+}
+
 export default function ContentHighlights() {
-  const [activeTab, setActiveTab] = useState("Instagram");
+  const [activeTab, setActiveTab] = useState("YouTube");
+  const [loading, setLoading] = useState(true);
+
+  // Simulated loading effect for tab changes
+  useEffect(() => {
+    setLoading(true);
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1000);
+    
+    return () => clearTimeout(timer);
+  }, [activeTab]); // Reset loading when tab changes
 
   const youtubeHighlights = [
     {
       id: 1,
-      title: "Color Explosion",
+      title: "Never Gonna Give You Up",
       videoId: "dQw4w9WgXcQ",
       duration: "3:42",
     },
@@ -83,45 +75,62 @@ export default function ContentHighlights() {
 
   const twitterPosts = [
     "1905292428010979412",
-    "1905292428010979412",
-    "1905292428010979412",
+    "1909647660497113116",
+    "1909643882062578139",
   ];
 
+  // Simple circular loading spinner
+  const SimpleCircularLoader = () => (
+    <div className="flex items-center justify-center w-full h-full min-h-64">
+      <div className="w-12 h-12 border-2 border-gray-600 border-t-white rounded-full animate-spin"></div>
+    </div>
+  );
+
   return (
-    <div className="bg-[#1A1919CC] rounded-xl p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-4xl font-bold text-white">Highlights</h2>
+    <div className="bg-[#1A1919CC] rounded-xl p-2 sm:p-4 h-full flex flex-col">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-2">
+        <h2 className="text-xl sm:text-2xl font-bold text-white mb-1 sm:mb-0">Highlights</h2>
         <ContentHighlightTabs
           activeTab={activeTab}
-          setActiveTab={setActiveTab}
+          setActiveTab={(tab) => {
+            setActiveTab(tab);
+          }}
         />
       </div>
 
-      {activeTab === "YouTube" && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {youtubeHighlights.map((item) => (
-            <YouTubeItem key={item.id} item={item} />
-          ))}
-        </div>
-      )}
+      <div className="flex-1 overflow-hidden">
+        {loading ? (
+          <SimpleCircularLoader />
+        ) : (
+          <>
+            {activeTab === "YouTube" && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 h-full">
+                {youtubeHighlights.map((item) => (
+                  <YouTubeItem key={item.id} item={item} />
+                ))}
+              </div>
+            )}
 
-      {activeTab === "Instagram" && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {instagramReels.map((reel) => (
-            <InstagramReelItem key={reel.id} reel={reel} />
-          ))}
-        </div>
-      )}
+            {activeTab === "Instagram" && (
+              <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 h-full">
+                {instagramReels.map((reel) => (
+                  <InstagramReelItem key={reel.id} reel={reel} />
+                ))}
+              </div>
+            )}
 
-      {activeTab === "Twitter" && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {twitterPosts.map((tweetId) => (
-            <div key={tweetId} className="w-full">
-              <TwitterEmbed tweetId={tweetId} />
-            </div>
-          ))}
-        </div>
-      )}
+            {activeTab === "Twitter" && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 h-full">
+                {twitterPosts.map((tweetId) => (
+                  <div key={tweetId} className="w-full h-full" style={{ minHeight: "300px", maxHeight: "400px" }}>
+                    <TwitterEmbed tweetId={tweetId} />
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }
@@ -138,14 +147,14 @@ function ContentHighlightTabs({
   const tabs = ["YouTube", "Instagram", "Twitter"];
 
   return (
-    <div className="flex justify-end gap-2">
+    <div className="flex overflow-x-auto scrollbar-hide justify-start sm:justify-end gap-2 pb-1">
       {tabs.map((tab) => (
         <button
           key={tab}
           onClick={() => setActiveTab(tab)}
-          className={`px-5 py-3 rounded-full text-sm transition-all ${
+          className={`px-2 py-1 sm:px-3 md:px-4 sm:py-1 rounded-full text-xs whitespace-nowrap transition-all ${
             activeTab === tab
-              ? "bg-white text-black "
+              ? "bg-white text-black font-medium"
               : "bg-white bg-opacity-10 text-[#6C6C89] border border-[#FFFFFF66]"
           }`}
         >
@@ -166,16 +175,72 @@ interface YouTubeItemProps {
 }
 
 function YouTubeItem({ item }: YouTubeItemProps) {
+  const [playerReady, setPlayerReady] = useState(false);
+  const [showThumbnail, setShowThumbnail] = useState(true);
+  
+  const onPlayerReady = () => {
+    setPlayerReady(true);
+  };
+   
+  const opts = {
+    playerVars: {
+      autoplay: 0,
+      modestbranding: 1,
+    },
+    width: '100%',
+    height: '100%',
+  };
+
+  const handlePlayVideo = () => {
+    setShowThumbnail(false);
+  };
+
   return (
     <div className="space-y-2">
       <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
-        <YouTube videoId={item.videoId} className="w-full h-full" />
+        {showThumbnail ? (
+          <div 
+            className="absolute inset-0 cursor-pointer" 
+            onClick={handlePlayVideo}
+            style={{
+              backgroundImage: `url(https://img.youtube.com/vi/${item.videoId}/mqdefault.jpg)`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center'
+            }}
+          >
+            <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-600 rounded-full flex items-center justify-center">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <>
+            {!playerReady && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-70 z-10">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-4 border-gray-300 border-t-white animate-spin"></div>
+              </div>
+            )}
+            <YouTube 
+              videoId={item.videoId} 
+              className="w-full h-full" 
+              opts={opts}
+              onReady={onPlayerReady}
+            />
+          </>
+        )}
+      </div>
+      <div className="px-1">
+        <h3 className="text-sm sm:text-base text-white font-medium truncate">{item.title}</h3>
+        <span className="text-xs text-gray-400">{item.duration}</span>
       </div>
     </div>
   );
 }
 
-interface InstagramReelItemProps {
+interface InstagramReelProps {
   reel: {
     id: number;
     username: string;
@@ -186,10 +251,11 @@ interface InstagramReelItemProps {
   };
 }
 
-function InstagramReelItem({ reel }: InstagramReelItemProps) {
+function InstagramReelItem({ reel }: InstagramReelProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef(null);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -228,7 +294,11 @@ function InstagramReelItem({ reel }: InstagramReelItemProps) {
   };
 
   return (
-    <div className="relative rounded-xl overflow-hidden aspect-[9/16] bg-gradient-to-br from-gray-900 to-black">
+    <div 
+      ref={containerRef}
+      className="relative rounded-xl overflow-hidden bg-gradient-to-br from-gray-900 to-black h-full"
+      style={{ aspectRatio: '9/16', maxHeight: '100%' }}
+    >
       <div className="absolute inset-0 w-full h-full z-0 bg-black">
         <video
           ref={videoRef}
@@ -242,23 +312,15 @@ function InstagramReelItem({ reel }: InstagramReelItemProps) {
       </div>
 
       {isLoading && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center z-20 bg-black bg-opacity-60">
-          <div className="w-16 h-16 rounded-full border-4 border-gray-300 border-t-white animate-spin mb-4"></div>
-
-          <div className="absolute bottom-0 left-0 right-0 p-3">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gray-600 rounded-full animate-pulse"></div>
-              <div className="h-4 w-24 bg-gray-600 rounded animate-pulse"></div>
-            </div>
-            <div className="h-3 w-32 bg-gray-600 rounded mt-2 animate-pulse"></div>
-          </div>
+        <div className="absolute inset-0 flex items-center justify-center z-20 bg-black bg-opacity-60">
+          <div className="w-10 h-10 rounded-full border-4 border-gray-300 border-t-white animate-spin"></div>
         </div>
       )}
 
-      <div className="absolute top-3 left-3 z-10">
+      <div className="absolute top-2 left-2 z-10">
         <svg
-          width="24"
-          height="24"
+          width="20"
+          height="20"
           viewBox="0 0 24 24"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
@@ -284,10 +346,10 @@ function InstagramReelItem({ reel }: InstagramReelItemProps) {
         onClick={togglePlay}
       >
         {!isPlaying && !isLoading && (
-          <div className="w-12 h-12 bg-black bg-opacity-30 rounded-full flex items-center justify-center">
+          <div className="w-8 h-8 bg-black bg-opacity-30 rounded-full flex items-center justify-center">
             <svg
-              width="24"
-              height="24"
+              width="16"
+              height="16"
               viewBox="0 0 24 24"
               fill="white"
               xmlns="http://www.w3.org/2000/svg"
@@ -298,19 +360,19 @@ function InstagramReelItem({ reel }: InstagramReelItemProps) {
         )}
       </div>
 
-      <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/70 to-transparent z-10">
+      <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/70 to-transparent z-10">
         <div className="flex items-center">
           <div className="flex items-center space-x-1">
-            <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+            <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
               P
             </div>
-            <span className="text-white text-sm font-medium">
+            <span className="text-white text-xs font-medium">
               {reel.username}
             </span>
             {reel.verified && (
               <svg
-                width="12"
-                height="12"
+                width="10"
+                height="10"
                 viewBox="0 0 24 24"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
@@ -331,74 +393,137 @@ function InstagramReelItem({ reel }: InstagramReelItemProps) {
   );
 }
 
-interface TwitterEmbedProps {
-  tweetId: string;
-}
-
-declare global {
-  interface Window {
-    twttr: any;
-  }
-}
-
-function TwitterEmbed({ tweetId }: TwitterEmbedProps) {
+function TwitterEmbed({ tweetId }: { tweetId: string }) {
   const tweetRef = useRef<HTMLDivElement>(null);
-
+  const [isLoading, setIsLoading] = useState(true);
+  const [failedToLoad, setFailedToLoad] = useState(false);
+  
   useEffect(() => {
-    const script = document.createElement("script");
-    script.src = "https://platform.twitter.com/widgets.js";
-    script.async = true;
-    script.charset = "utf-8";
-    document.body.appendChild(script);
-
-    const renderTweet = () => {
-      if (window.twttr && tweetRef.current) {
-        tweetRef.current.innerHTML = "";
-        window.twttr.widgets.createTweet(tweetId, tweetRef.current, {
-          theme: "dark",
+    let isMounted = true;
+    
+    const loadTwitterScript = () => {
+      return new Promise((resolve, reject) => {
+        // Check if script already exists
+        if (window.twttr) {
+          return resolve(window.twttr);
+        }
+        
+        // Create script element
+        const script = document.createElement('script');
+        script.setAttribute('src', 'https://platform.twitter.com/widgets.js');
+        script.setAttribute('async', 'true');
+        script.onload = () => resolve(window.twttr);
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+    };
+    
+    const renderTweet = async () => {
+      if (!tweetRef.current) return;
+      
+      try {
+        // Load Twitter script and wait for it to be ready
+        const twitter = await loadTwitterScript() as {
+          widgets: any;
+          ready: (callback: () => void) => void;
+        };
+        
+        // Wait for widgets to be ready
+        await new Promise<void>(resolve => {
+          if (twitter.widgets) {
+            resolve(void 0);
+          } else {
+            twitter.ready(resolve);
+          }
         });
+        
+        if (!isMounted || !tweetRef.current) return;
+        
+        // Clear any existing content
+        tweetRef.current.innerHTML = '';
+        
+        // Create the tweet
+        const tweetElement = await twitter.widgets.createTweet(tweetId, tweetRef.current, {
+          theme: 'dark',
+          dnt: true,
+          width: '100%'
+        });
+        
+        if (isMounted) {
+          if (tweetElement) {
+            setIsLoading(false);
+          } else {
+            setFailedToLoad(true);
+            setIsLoading(false);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading tweet:', error);
+        if (isMounted) {
+          setFailedToLoad(true);
+          setIsLoading(false);
+        }
       }
     };
-
-    script.onload = renderTweet;
-
-    if (window.twttr) {
-      renderTweet();
-    }
-
+    
+    renderTweet();
+    
     return () => {
-      document.body.removeChild(script);
+      isMounted = false;
     };
   }, [tweetId]);
+  
+  // Simple circular loading spinner
+  const SimpleCircularLoader = () => (
+    <div className="flex items-center justify-center w-full h-full min-h-[300px] bg-[#1A191999]">
+      <div className="w-10 h-10 border-2 border-gray-600 border-t-white rounded-full animate-spin"></div>
+    </div>
+  );
+  
+  // Fallback component for failed loads
+  const tweetFallback = (
+    <div className="flex flex-col p-4 bg-[#1A191999] border border-gray-800 rounded-xl h-full min-h-[300px]">
+      <div className="flex items-center mb-3">
+        <div className="w-10 h-10 rounded-full bg-[#1DA1F2] flex items-center justify-center text-white font-bold">
+          X
+        </div>
+        <div className="ml-3">
+          <p className="text-white font-medium">Tweet not available</p>
+          <p className="text-gray-400 text-xs">@x</p>
+        </div>
+      </div>
+      
+      <p className="text-gray-300 text-sm my-2">
+        This tweet couldn't be loaded. It may be private, deleted, or temporarily unavailable.
+      </p>
+      
+      <a 
+        href={`https://x.com/i/web/status/${tweetId}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-auto self-start px-4 py-2 bg-[#222] hover:bg-[#333] text-white rounded-full text-sm transition-colors"
+      >
+        View on X.com
+      </a>
+    </div>
+  );
 
   return (
-    <div
-      ref={tweetRef}
-      className="twitter-embed overflow-hidden bg-[#1A191999] rounded-xl min-h-64"
-    >
-      <div className="flex items-center justify-center w-full h-full p-6 text-white">
-        <svg
-          className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-        >
-          <circle
-            className="opacity-25"
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="currentColor"
-            strokeWidth="4"
-          ></circle>
-          <path
-            className="opacity-75"
-            fill="currentColor"
-            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-          ></path>
-        </svg>
-        Loading tweet...
-      </div>
+    <div className="bg-[#1A191999] rounded-xl h-full overflow-hidden">
+      {isLoading ? (
+        <SimpleCircularLoader />
+      ) : (
+        <div 
+          ref={tweetRef} 
+          className="w-full h-full overflow-y-auto"
+        ></div>
+      )}
+      
+      {failedToLoad && !isLoading && (
+        <div className="absolute inset-0 z-20">
+          {tweetFallback}
+        </div>
+      )}
     </div>
   );
 }
