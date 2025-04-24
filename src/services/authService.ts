@@ -34,11 +34,9 @@ const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 const API_URL = rawApiUrl.endsWith("/api/v1")
   ? rawApiUrl.slice(0, -8)
   : rawApiUrl;
-console.log("API URL:", API_URL); // Debug log
 
 // Base API path for auth endpoints
 const AUTH_BASE_PATH = "/api/v1/auth";
-console.log("Full Auth URL:", `${API_URL}${AUTH_BASE_PATH}/login`); // Debug log
 
 /**
  * Login a user
@@ -49,9 +47,6 @@ export async function loginUser(
   credentials: LoginPayload
 ): Promise<AuthResponse> {
   try {
-    console.log("Attempting login for email:", credentials.email);
-    console.log("Connecting to:", `${API_URL}/auth/login`);
-
     // const response = await fetch(`${API_URL}${AUTH_BASE_PATH}/login`, {
     //   method: "POST",
     //   headers: {
@@ -69,7 +64,6 @@ export async function loginUser(
     });
 
     const data = await response.data;
-    console.log("Login response status:", response.status);
 
     if (response.status !== 200) {
       console.error("Login failed:", data.message);
@@ -82,8 +76,6 @@ export async function loginUser(
       throw new Error("No authentication token received");
     }
 
-    console.log("Login successful, received token");
-
     // Store the token
     setAuthToken(data.token);
 
@@ -93,8 +85,6 @@ export async function loginUser(
       console.error("Failed to store authentication token");
       throw new Error("Failed to store authentication token");
     }
-
-    console.log("Token stored successfully");
 
     return {
       success: true,
@@ -235,15 +225,12 @@ export async function resetPassword(
  * @param token - JWT token to store
  */
 export function setAuthToken(token: string): void {
-  console.log("Attempting to store auth token...");
-
   // Make sure we're in a browser environment
   if (typeof window !== "undefined" && window.localStorage) {
     try {
       localStorage.setItem("auth_token", token);
       const storedToken = localStorage.getItem("auth_token");
       if (storedToken === token) {
-        console.log("Auth token saved and verified successfully");
       } else {
         console.error("Token verification failed after storage");
       }
@@ -254,10 +241,6 @@ export function setAuthToken(token: string): void {
     console.warn(
       "Unable to store auth token: Not in browser environment or localStorage not available"
     );
-    console.log("Environment check:", {
-      hasWindow: typeof window !== "undefined",
-      hasLocalStorage: typeof window !== "undefined" && !!window.localStorage,
-    });
   }
 }
 
@@ -266,14 +249,11 @@ export function setAuthToken(token: string): void {
  * @returns The stored JWT token or null if not found
  */
 export function getAuthToken(): string | null {
-  console.log("Attempting to retrieve auth token...");
-
   // Make sure we're in a browser environment
   if (typeof window !== "undefined" && window.localStorage) {
     try {
       const token = localStorage.getItem("auth_token");
       if (token) {
-        console.log("Auth token found:", token.substring(0, 10) + "...");
       } else {
         console.warn("No auth token found in localStorage");
       }
@@ -286,10 +266,7 @@ export function getAuthToken(): string | null {
     console.warn(
       "Unable to retrieve auth token: Not in browser environment or localStorage not available"
     );
-    console.log("Environment check:", {
-      hasWindow: typeof window !== "undefined",
-      hasLocalStorage: typeof window !== "undefined" && !!window.localStorage,
-    });
+
     return null;
   }
 }
@@ -298,8 +275,6 @@ export function getAuthToken(): string | null {
  * Remove the stored JWT token
  */
 export function removeAuthToken(): void {
-  console.log("Attempting to remove auth token...");
-
   // Make sure we're in a browser environment
   if (typeof window !== "undefined" && window.localStorage) {
     try {
@@ -308,11 +283,9 @@ export function removeAuthToken(): void {
       const tokenAfter = localStorage.getItem("auth_token");
 
       if (!tokenAfter && tokenBefore) {
-        console.log("Auth token removed successfully");
       } else if (tokenAfter) {
         console.error("Failed to remove auth token");
       } else {
-        console.log("No token was present to remove");
       }
     } catch (error) {
       console.error("Error removing auth token:", error);
@@ -321,10 +294,6 @@ export function removeAuthToken(): void {
     console.warn(
       "Unable to remove auth token: Not in browser environment or localStorage not available"
     );
-    console.log("Environment check:", {
-      hasWindow: typeof window !== "undefined",
-      hasLocalStorage: typeof window !== "undefined" && !!window.localStorage,
-    });
   }
 }
 
@@ -333,9 +302,8 @@ export function removeAuthToken(): void {
  * @returns Boolean indicating if user is authenticated
  */
 export function isAuthenticated(): boolean {
-  console.log("Checking authentication status...");
   const token = getAuthToken();
   const isAuth = !!token;
-  console.log("Authentication check result:", { isAuthenticated: isAuth });
+
   return isAuth;
 }
