@@ -1,7 +1,17 @@
-import type { NextConfig } from "next";
+import { NextConfig } from "next";
 
-const nextConfig: NextConfig = {
-  /* config options here */
+const config: NextConfig = {
+  webpack: (config, { isServer }) => {
+    // Add WebSocket support
+    config.externals = [...(config.externals || [])];
+    if (isServer) {
+      config.externals.push({
+        "utf-8-validate": "commonjs utf-8-validate",
+        bufferutil: "commonjs bufferutil",
+      });
+    }
+    return config;
+  },
 };
 
-export default nextConfig;
+export default config;

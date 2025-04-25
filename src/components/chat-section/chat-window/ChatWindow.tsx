@@ -1,10 +1,12 @@
 "use client";
+//importing websocket
+import { useWebSocket } from '@/lib/websocket/websocket.context';
 
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import {
   DollarSign,
-  Image as ImageIcon,
+  Image as ImageIcon, 
   Send,
   ArrowLeft,
   Mic,
@@ -62,6 +64,9 @@ export default function ChatWindow({
   const [showAwardForm, setShowAwardForm] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+
+  const { sendMessage: sendWebSocketMessage, socket } = useWebSocket();
+
 
   useEffect(() => {
     // Check if it's a mobile device
@@ -173,6 +178,59 @@ export default function ChatWindow({
       sender: "self",
       timestamp: timeString,
     };
+
+    //modify the message to be sent to the websocket
+    // Add image/file handling as before...
+
+    const updatedMessages = [...chat.messages, userMessage];
+    const updatedChat = {
+      ...chat,
+      messages: updatedMessages,
+    };
+
+    setChat(updatedChat);
+    if (onChatUpdate) {
+      onChatUpdate(updatedChat);
+    }
+
+    // Send message through WebSocket
+    sendWebSocketMessage({
+      type: 'chat_message',
+      chatId: chat.id,
+      message: userMessage,
+    });
+
+    setNewMessage("");
+    setSelectedImage(null);
+    setSelectedFile(null);
+  };
+
+  // Add WebSocket message listener
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleWebSocketMessage = (event: MessageEvent) => {
+      const data = JSON.parse(event.data);
+      if (data.type === 'chat_message' && data.chatId === chat.id) {
+        const updatedMessages = [...chat.messages, data.message];
+        const updatedChat = {
+          ...chat,
+          messages: updatedMessages,
+        };
+        setChat(updatedChat);
+        if (onChatUpdate) {
+          onChatUpdate(updatedChat);
+        }
+      }
+    };
+
+    socket.addEventListener('message', handleWebSocketMessage);
+
+    return () => {
+      socket.removeEventListener('message', handleWebSocketMessage);
+    };
+  }, [socket, chat]);
+
 
     if (selectedImage) {
       const imageUrl = URL.createObjectURL(selectedImage);
