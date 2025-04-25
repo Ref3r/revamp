@@ -1,4 +1,5 @@
-import React from "react";
+"use client";
+import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -7,6 +8,10 @@ import {
   MessageCircle,
   HeartHandshake,
   BarChart,
+  LogOut,
+  Share2,
+  User,
+  ChevronUp,
 } from "lucide-react";
 
 const navItems = [
@@ -43,6 +48,27 @@ const navItems = [
 ];
 
 const Sidebar = ({ isMobile = false }) => {
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+  const toggleDropdown = () => {
+    setShowDropdown(!showDropdown);
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   if (isMobile) {
     return (
       <div className="flex justify-between items-center w-full">
@@ -57,15 +83,46 @@ const Sidebar = ({ isMobile = false }) => {
             </span>
           </Link>
         ))}
-        <Link href="#" className="flex items-center justify-center p-2">
-          <Image
-            src="/profile-photo.svg"
-            width={24}
-            height={24}
-            alt="Profile"
-            className="rounded-full"
-          />
-        </Link>
+        <div className="relative" ref={dropdownRef}>
+          <button 
+            onClick={toggleDropdown} 
+            className="flex items-center justify-center p-2 focus:outline-none"
+          >
+            <Image
+              src="/profile-photo.svg"
+              width={24}
+              height={24}
+              alt="Profile"
+              className="rounded-full"
+            />
+          </button>
+          
+          {showDropdown && (
+            <div className="absolute right-0 mt-2 w-48 bg-[#1A1919] rounded-lg shadow-lg py-1 z-10">
+              <Link 
+                href="/profile" 
+                className="flex items-center px-4 py-2 text-sm text-white hover:bg-[#2A2A2A]"
+              >
+                <User size={16} className="mr-2" />
+                Profile
+              </Link>
+              <Link 
+                href="/connect" 
+                className="flex items-center px-4 py-2 text-sm text-white hover:bg-[#2A2A2A]"
+              >
+                <Share2 size={16} className="mr-2" />
+                Connect Social Media
+              </Link>
+              <button 
+                className="flex items-center px-4 py-2 text-sm text-white hover:bg-[#2A2A2A] w-full text-left"
+                onClick={() => console.log("Logout clicked")}
+              >
+                <LogOut size={16} className="mr-2" />
+                Log Out
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     );
   }
@@ -106,9 +163,12 @@ const Sidebar = ({ isMobile = false }) => {
           </ul>
         </nav>
 
-        {/* Profile/Settings */}
-        <div className="pb-6">
-          <Link href="#" className="block">
+        {/* Profile/Settings with Dropdown */}
+        <div className="pb-6 relative" ref={dropdownRef}>
+          <button 
+            onClick={toggleDropdown}
+            className="flex items-center focus:outline-none"
+          >
             <Image
               src="/profile-photo.svg"
               width={36}
@@ -116,7 +176,36 @@ const Sidebar = ({ isMobile = false }) => {
               alt="Profile"
               className="w-8 h-8 rounded-full"
             />
-          </Link>
+            {showDropdown && (
+              <ChevronUp size={12} className="absolute -top-3 text-gray-400" />
+            )}
+          </button>
+          
+          {showDropdown && (
+            <div className="absolute bottom-14 left-16 w-48 bg-[#1A1919] rounded-lg shadow-lg py-1 z-10">
+              <Link 
+                href="/profile" 
+                className="flex items-center px-4 py-2 text-sm text-white hover:bg-[#2A2A2A]"
+              >
+                <User size={16} className="mr-2" />
+                Profile
+              </Link>
+              <Link 
+                href="/connect" 
+                className="flex items-center px-4 py-2 text-sm text-white hover:bg-[#2A2A2A]"
+              >
+                <Share2 size={16} className="mr-2" />
+                Connect Social Media
+              </Link>
+              <button 
+                className="flex items-center px-4 py-2 text-sm text-white hover:bg-[#2A2A2A] w-full text-left"
+                onClick={() => console.log("Logout clicked")}
+              >
+                <LogOut size={16} className="mr-2" />
+                Log Out
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

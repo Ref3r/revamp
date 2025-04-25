@@ -35,6 +35,7 @@ const ProfileBox = ({
   const bio =
     userData?.bio ||
     "Sometimes like to design, sometimes just like to create chaos";
+  const rank = userData?.rank || "49";
 
   // If loading, show loading state
   if (isLoading) {
@@ -66,77 +67,24 @@ const ProfileBox = ({
   return (
     <div className="w-full">
       <div className="bg-[#1A1919] rounded-[20px] p-4">
-        <div className="flex flex-col 2xl:hidden">
-          <div className="flex flex-col items-center">
-            <div className="mb-2">
-              <Image
-                src={profilePic}
-                width={80}
-                height={80}
-                alt="Profile photo"
-                className="rounded-full w-20 h-20"
-              />
-            </div>
-            <div className="flex flex-col items-center mb-1">
-              <h1 className="text-white font-bold text-xl">{username}</h1>
-              <div className="border border-white rounded-full px-2 py-0.5 text-[8px] text-white bg-[#0E0E0E]">
-                {userData?.followers?.length
-                  ? `${userData.followers.length} followers`
-                  : "Rank 49"}
-              </div>
-            </div>
-            <p className="text-sm text-[#FFFFFF7A] font-normal text-center mb-2 max-w-[220px]">
-              {bio}
-            </p>
-            {isPublicView && (
-              <Button
-                className="bg-gradient-to-r from-[#0BA360] to-[#27A980] hover:bg-gradient-to-r hover:from-[#27A980] hover:to-[#0BA360] text-white rounded-md font-medium text-sm px-4 py-2 mb-3"
-                onClick={toggleForm}
-              >
-                Contact Creator
-              </Button>
-            )}
-            <div className="flex items-center justify-center">
-              <Image
-                src="/gold-medal.svg"
-                width={16}
-                height={16}
-                alt="Gold medal"
-                className="mr-2"
-              />
-              <p className="text-white font-medium text-sm">
-                Voted #1 in Design Community
-              </p>
-            </div>
+        <div className="flex items-start gap-3">
+          <div>
+            <Image
+              src={profilePic}
+              width={50}
+              height={50}
+              alt="Profile photo"
+              className="rounded-full"
+            />
           </div>
-        </div>
-
-        <div className="hidden 2xl:flex items-center gap-4">
-          <Image
-            src={profilePic}
-            width={130}
-            height={130}
-            alt="Profile photo"
-            className="rounded-full w-32 h-32"
-          />
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
-              <h1 className="text-white font-bold text-xl">{username}</h1>
+              <h1 className="text-white font-bold">{username}</h1>
               <div className="border border-white rounded-full px-2 py-0.5 text-[8px] text-white bg-[#0E0E0E]">
-                {userData?.followers?.length
-                  ? `${userData.followers.length} followers`
-                  : "Rank 49"}
+                Rank {rank}
               </div>
             </div>
-            <p className="text-sm text-[#FFFFFF7A] font-normal mt-2">{bio}</p>
-            {isPublicView && (
-              <Button
-                className="bg-gradient-to-r from-[#0BA360] to-[#27A980] hover:bg-gradient-to-r hover:from-[#27A980] hover:to-[#0BA360] text-white rounded-md font-medium text-sm px-4 py-2 mt-2 mb-2 w-fit"
-                onClick={toggleForm}
-              >
-                Contact Creator
-              </Button>
-            )}
+            <p className="text-sm text-[#FFFFFF7A] font-normal mt-1">{bio}</p>
             <div className="flex items-center mt-1">
               <Image
                 src="/gold-medal.svg"
@@ -145,12 +93,23 @@ const ProfileBox = ({
                 alt="Gold medal"
                 className="mr-2"
               />
-              <p className="text-white font-medium text-xs">
+              <p className="text-white text-xs">
                 Voted #1 in Design Community
               </p>
             </div>
           </div>
         </div>
+
+        {isPublicView && (
+          <div className="mt-3">
+            <Button
+              className="bg-gradient-to-r from-[#0BA360] to-[#27A980] hover:bg-gradient-to-r hover:from-[#27A980] hover:to-[#0BA360] text-white rounded-md font-medium text-sm px-4 py-2 w-full"
+              onClick={toggleForm}
+            >
+              Contact Creator
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Collaboration Form Slide-in Panel */}

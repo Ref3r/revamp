@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { Button } from "@lemonsqueezy/wedges";
+import { FacebookIcon, Linkedin, LinkedinIcon, LucideLinkedin, TwitterIcon } from "lucide-react";
 
 interface SocialPlatform {
   identifier: string;
@@ -53,15 +54,15 @@ const SocialConnect: React.FC<SocialConnectProps> = ({ onConnect }) => {
 
   // Map platform identifiers to corresponding icon paths
   const getIconPath = (identifier: string) => {
-    const iconMap: Record<string, string> = {
+    const iconMap: Record<string, any> = {
       instagram: "/lucide_instagram.svg",
-      facebook: "/lucide_facebook.svg",
+      facebook: <FacebookIcon className="w-5 h-5" />,
       tiktok: "/tiktok.svg",
       youtube: "/lucide_youtube.svg",
-      x: "/lucide_twitter.svg",
-      linkedin: "/lucide_linkedin.svg",
+      x: <TwitterIcon className="w-5 h-5" />,
+      linkedin: <LinkedinIcon className="w-5 h-5" />,
       "instagram-standalone": "/lucide_instagram.svg",
-      "linkedin-page": "/lucide_linkedin.svg",
+      "linkedin-page": <LucideLinkedin className="w-5 h-5" />,
     };
 
     return iconMap[identifier] || "/default-icon.svg";
@@ -82,12 +83,16 @@ const SocialConnect: React.FC<SocialConnectProps> = ({ onConnect }) => {
         >
           <div className="flex justify-center items-center gap-2">
             <div className="w-5">
-              <Image
-                src={getIconPath(platform.identifier)}
-                alt={platform.name}
-                width={16}
-                height={16}
-              />
+              {typeof getIconPath(platform.identifier) === "string" ? (
+                <Image
+                  src={getIconPath(platform.identifier)}
+                  alt={platform.name}
+                  width={16}
+                  height={16}
+                />
+              ) : (
+                getIconPath(platform.identifier)
+              )}
             </div>
             <span className="text-sm">{platform.name}</span>
           </div>

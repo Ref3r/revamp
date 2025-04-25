@@ -201,7 +201,7 @@ const Post2 = ({ post }: PostProps) => {
 				<div className="flex justify-between items-center mb-3">
 					<Button
 						onClick={() => handleLikeToggle()}
-						className="flex items-center bg-transparent hover:bg-[#282828] rounded-lg px-3 py-2"
+						className="flex flex-row items-center bg-transparent hover:bg-[#282828] rounded-lg px-3 py-2"
 					>
 						<Image
 							src={isLiked ? "/thumbs-up-filled.svg" : "/thumbs-up.svg"}
