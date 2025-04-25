@@ -5,7 +5,7 @@ import Data from "@/components/analytics-dashboard/Data";
 import AgeSegmentation from "@/components/analytics-dashboard/Age-segmentation";
 import Leaderboard from "@/components/analytics-dashboard/Leaderboard";
 import Sidebar from "@/components/dashboard/Sidebar";
-import FollowerCharts from "@/components/public-view-dashboard/Follower-chart";
+import FollowerCharts from "@/components/public-view-dashboard/PartnershipsSection";
 
 const Page = () => {
   return (
@@ -20,10 +20,11 @@ const Page = () => {
           <Data />
 
           {/* Analytics charts section */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <FollowerCharts className="h-80" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* FollowerCharts */}
+            <FollowerCharts />
             <AgeSegmentation className="h-80" />
-            </div>
+          </div>
 
           {/* Leaderboard section */}
           <Leaderboard />
