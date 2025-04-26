@@ -52,6 +52,7 @@ export default function ChatWindow({
   onBack,
   onChatUpdate,
 }: ChatWindowProps) {
+  // All hooks at the top
   const [chat, setChat] = useState<Chat | undefined>(initialChat);
   const [newMessage, setNewMessage] = useState("");
   const [isRecording, setIsRecording] = useState(false);
@@ -64,76 +65,13 @@ export default function ChatWindow({
   const [showAwardForm, setShowAwardForm] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
 
   const { sendMessage: sendWebSocketMessage, socket } = useWebSocket();
 
-
-  useEffect(() => {
-    // Check if it's a mobile device
-    const checkIfMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    // Initial check
-    checkIfMobile();
-
-    // Add event listener for window resize
-    window.addEventListener("resize", checkIfMobile);
-
-    // Cleanup
-    return () => {
-      window.removeEventListener("resize", checkIfMobile);
-    };
-  }, []);
-
-  useEffect(() => {
-    setChat(initialChat);
-  }, [initialChat]);
-
-  useEffect(() => {
-    messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [chat?.messages]);
-
-  // Recording timer effect
-  useEffect(() => {
-    if (isRecording) {
-      timerRef.current = setInterval(() => {
-        setRecordingTime((prevTime) => prevTime + 1);
-      }, 1000);
-    } else {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        setRecordingTime(0);
-      }
-    }
-
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-    };
-  }, [isRecording]);
-
-  // Format recording time to MM:SS
-  const formatTime = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes.toString().padStart(2, "0")}:${remainingSeconds
-      .toString()
-      .padStart(2, "0")}`;
-  };
-
-  if (!chat) {
-    return (
-      <div className="flex-1 bg-[#0E0E0E] flex items-center justify-center h-[100dvh] md:h-full">
-        <p className="text-gray-400 text-sm sm:text-base md:text-lg px-4 text-center">
-          Select a chat to start messaging
-        </p>
-      </div>
-    );
-  }
-
-  // Function to get the display name of a collaboration type
+  // All helper functions at the top level
   const getCollabTypeLabel = (value: string) => {
     const collabTypes = [
       { value: "sponsored-post", label: "Sponsored Post" },
@@ -161,6 +99,7 @@ export default function ChatWindow({
   };
 
   const handleSendMessage = () => {
+    if (!chat) return;
     if (newMessage.trim() === "" && !selectedImage && !selectedFile) return;
 
     const now = new Date();
@@ -179,8 +118,22 @@ export default function ChatWindow({
       timestamp: timeString,
     };
 
-    //modify the message to be sent to the websocket
-    // Add image/file handling as before...
+    if (selectedImage) {
+      const imageUrl = URL.createObjectURL(selectedImage);
+      userMessage.imageUrl = imageUrl;
+      if (!newMessage.trim()) {
+        userMessage.content = "";
+      }
+    }
+
+    if (selectedFile) {
+      const fileUrl = URL.createObjectURL(selectedFile);
+      userMessage.fileUrl = fileUrl;
+      userMessage.fileName = selectedFile.name;
+      if (!newMessage.trim()) {
+        userMessage.content = `Sent a file: ${selectedFile.name}`;
+      }
+    }
 
     const updatedMessages = [...chat.messages, userMessage];
     const updatedChat = {
@@ -203,70 +156,8 @@ export default function ChatWindow({
     setNewMessage("");
     setSelectedImage(null);
     setSelectedFile(null);
-  };
 
-  // Add WebSocket message listener
-  useEffect(() => {
-    if (!socket) return;
-
-    const handleWebSocketMessage = (event: MessageEvent) => {
-      const data = JSON.parse(event.data);
-      if (data.type === 'chat_message' && data.chatId === chat.id) {
-        const updatedMessages = [...chat.messages, data.message];
-        const updatedChat = {
-          ...chat,
-          messages: updatedMessages,
-        };
-        setChat(updatedChat);
-        if (onChatUpdate) {
-          onChatUpdate(updatedChat);
-        }
-      }
-    };
-
-    socket.addEventListener('message', handleWebSocketMessage);
-
-    return () => {
-      socket.removeEventListener('message', handleWebSocketMessage);
-    };
-  }, [socket, chat]);
-
-
-    if (selectedImage) {
-      const imageUrl = URL.createObjectURL(selectedImage);
-      userMessage.imageUrl = imageUrl;
-
-      if (!newMessage.trim()) {
-        userMessage.content = "";
-      }
-    }
-
-    if (selectedFile) {
-      const fileUrl = URL.createObjectURL(selectedFile);
-      userMessage.fileUrl = fileUrl;
-      userMessage.fileName = selectedFile.name;
-
-      if (!newMessage.trim()) {
-        userMessage.content = `Sent a file: ${selectedFile.name}`;
-      }
-    }
-
-    const updatedMessages = [...chat.messages, userMessage];
-
-    const updatedChat = {
-      ...chat,
-      messages: updatedMessages,
-    };
-
-    setChat(updatedChat);
-    if (onChatUpdate) {
-      onChatUpdate(updatedChat);
-    }
-
-    setNewMessage("");
-    setSelectedImage(null);
-    setSelectedFile(null);
-
+    // Simulate a response (optional, for demo)
     setTimeout(() => {
       const responseContent = generateHardcodedResponse(userMessage.content);
       const responseTime = new Date();
@@ -341,12 +232,30 @@ export default function ChatWindow({
     setSelectedFile(null);
   };
 
-  const handleVoiceRecording = () => {
-    setIsRecording(!isRecording);
+  const handleVoiceRecording = async () => {
     if (!isRecording) {
-      console.log("Starting voice recording...");
+      // Start recording
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      const chunks: BlobPart[] = [];
+
+      mediaRecorder.ondataavailable = (e) => {
+        chunks.push(e.data);
+      };
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(chunks, { type: "audio/webm" });
+        setAudioBlob(blob);
+        setAudioUrl(URL.createObjectURL(blob));
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
     } else {
-      console.log("Stopping voice recording...");
+      // Stop recording
+      mediaRecorderRef.current?.stop();
+      setIsRecording(false);
     }
   };
 
@@ -368,8 +277,8 @@ export default function ChatWindow({
     }
   };
 
-  // Handle collaboration form submission
   const handleCollabFormSubmit = (formData: CollaborationFormData) => {
+    if (!chat) return;
     const now = new Date();
     const timeString = now.toLocaleTimeString([], {
       hour: "2-digit",
@@ -405,8 +314,8 @@ export default function ChatWindow({
     setShowForm(false);
   };
 
-  // Handle accepting a collaboration project
   const handleAcceptProject = (messageId: number) => {
+    if (!chat) return;
     const updatedMessages = chat.messages.map((message) => {
       if (message.id === messageId) {
         return {
@@ -427,6 +336,138 @@ export default function ChatWindow({
       onChatUpdate(updatedChat);
     }
   };
+
+  // All useEffects at the top level
+  useEffect(() => {
+    // Check if it's a mobile device
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    // Initial check
+    checkIfMobile();
+
+    // Add event listener for window resize
+    window.addEventListener("resize", checkIfMobile);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener("resize", checkIfMobile);
+    };
+  }, []);
+
+  useEffect(() => {
+    setChat(initialChat);
+  }, [initialChat]);
+
+  useEffect(() => {
+    messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chat?.messages]);
+
+  // Recording timer effect
+  useEffect(() => {
+    if (isRecording) {
+      timerRef.current = setInterval(() => {
+        setRecordingTime((prevTime) => prevTime + 1);
+      }, 1000);
+    } else {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        setRecordingTime(0);
+      }
+    }
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, [isRecording]);
+
+  // Format recording time to MM:SS
+  const formatTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes.toString().padStart(2, "0")}:${remainingSeconds
+      .toString()
+      .padStart(2, "0")}`;
+  };
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleWebSocketMessage = (event: MessageEvent) => {
+      const data = JSON.parse(event.data);
+      if (data.type === 'chat_message' && data.chatId === chat?.id) {
+        const updatedMessages = [...(chat?.messages || []), data.message];
+        const updatedChat = {
+          ...chat!,
+          messages: updatedMessages,
+        };
+        setChat(updatedChat);
+        if (onChatUpdate) {
+          onChatUpdate(updatedChat);
+        }
+      }
+    };
+
+    socket.addEventListener('message', handleWebSocketMessage);
+
+    return () => {
+      socket.removeEventListener('message', handleWebSocketMessage);
+    };
+  }, [socket, chat, onChatUpdate]);
+
+  const handleSendAudio = () => {
+    if (!audioBlob) return;
+    if (!chat) return;
+    const now = new Date();
+    const timeString = now.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    const audioMessage: Message = {
+      id: (chat.messages.length > 0
+        ? Math.max(...chat.messages.map((m) => m.id))
+        : 0) + 1,
+      content: "", // or "Audio message"
+      sender: "self",
+      timestamp: timeString,
+      fileUrl: audioUrl!,
+      fileName: "audio-message.webm",
+    };
+
+    const updatedMessages = [...chat.messages, audioMessage];
+    const updatedChat = {
+      ...chat,
+      messages: updatedMessages,
+    };
+
+    setChat(updatedChat);
+    if (onChatUpdate) {
+      onChatUpdate(updatedChat);
+    }
+
+    sendWebSocketMessage({
+      type: "chat_message",
+      chatId: chat.id,
+      message: audioMessage,
+    });
+
+    setAudioBlob(null);
+    setAudioUrl(null);
+  };
+
+  if (!chat) {
+    return (
+      <div className="flex-1 bg-[#0E0E0E] flex items-center justify-center h-[100dvh] md:h-full">
+        <p className="text-gray-400 text-sm sm:text-base md:text-lg px-4 text-center">
+          Select a chat to start messaging
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 bg-[#0E0E0E] flex flex-col h-screen md:h-full relative">
@@ -567,34 +608,11 @@ export default function ChatWindow({
                 )}
 
                 {/* File attachment */}
+                {message.fileUrl && message.fileName && message.fileName.match(/\.(webm|mp3|wav)$/) && (
+                  <audio controls src={message.fileUrl} className="my-2" />
+                )}
                 {message.fileUrl && message.fileName && (
-                  <div className="mt-2 flex items-center bg-gray-800/30 rounded-lg p-2">
-                    <div className="bg-gray-700 p-2 rounded-lg mr-2">
-                      <svg
-                        className="w-5 h-5 text-gray-300"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </div>
-                    <div className="overflow-hidden">
-                      <p className="text-xs text-gray-200 truncate">
-                        {message.fileName}
-                      </p>
-                      <a
-                        href={message.fileUrl}
-                        download={message.fileName}
-                        className="text-[10px] text-blue-400 hover:underline"
-                      >
-                        Download
-                      </a>
-                    </div>
-                  </div>
+                  <a href={message.fileUrl} download={message.fileName} className="text-blue-400 underline ml-2">Download</a>
                 )}
               </div>
             )}
@@ -654,6 +672,13 @@ export default function ChatWindow({
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {audioUrl && (
+        <div className="my-2">
+          <audio controls src={audioUrl}></audio>
+          <Button onClick={handleSendAudio}>Send Audio</Button>
         </div>
       )}
 

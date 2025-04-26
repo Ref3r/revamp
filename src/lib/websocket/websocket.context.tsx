@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+// revamp/src/lib/websocket/websocket.context.tsx
+"use client";
+import React, { createContext, useContext, useEffect, useState } from "react";
 
 interface WebSocketContextType {
   socket: WebSocket | null;
@@ -17,17 +19,10 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    const ws = new WebSocket('ws://localhost:3000');
+    const ws = new WebSocket("ws://localhost:3000"); // Change URL if needed
 
-    ws.onopen = () => {
-      console.log('Connected to WebSocket');
-      setIsConnected(true);
-    };
-
-    ws.onclose = () => {
-      console.log('Disconnected from WebSocket');
-      setIsConnected(false);
-    };
+    ws.onopen = () => setIsConnected(true);
+    ws.onclose = () => setIsConnected(false);
 
     setSocket(ws);
 
