@@ -1,10 +1,12 @@
 "use client";
+//importing websocket
+import { useWebSocket } from '@/lib/websocket/websocket.context';
 
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import {
   DollarSign,
-  Image as ImageIcon,
+  Image as ImageIcon, 
   Send,
   ArrowLeft,
   Mic,
@@ -13,9 +15,7 @@ import {
   Check,
 } from "lucide-react";
 import { Button, Input } from "@lemonsqueezy/wedges";
-import CollaborationForm, {
-  CollaborationFormData,
-} from "../collab-request-form/CollaborationForm ";
+import CollaborationForm, { CollaborationFormData } from "../collab-request-form/CollaborationForm ";
 import Form from "@/components/communities/community-challenge-form/Form";
 
 interface Message {
@@ -32,12 +32,11 @@ interface Message {
 }
 
 interface Chat {
-  id: string; // Changed from number to string to match communityId
+  id: number;
   name: string;
   avatar: string;
   lastSeen: string;
   messages: Message[];
-  communityId?: string; // Added to support API messaging
 }
 
 interface ChatWindowProps {
@@ -45,7 +44,6 @@ interface ChatWindowProps {
   activeTab: string;
   onBack: () => void;
   onChatUpdate: (updatedChat: Chat) => void;
-  onSendMessage?: (chatId: string, content: string) => Promise<void>;
 }
 
 export default function ChatWindow({
@@ -53,8 +51,8 @@ export default function ChatWindow({
   activeTab,
   onBack,
   onChatUpdate,
-  onSendMessage,
 }: ChatWindowProps) {
+  // All hooks at the top
   const [chat, setChat] = useState<Chat | undefined>(initialChat);
   const [newMessage, setNewMessage] = useState("");
   const [isRecording, setIsRecording] = useState(false);
@@ -67,7 +65,279 @@ export default function ChatWindow({
   const [showAwardForm, setShowAwardForm] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
 
+  const { sendMessage: sendWebSocketMessage, socket } = useWebSocket();
+
+  // All helper functions at the top level
+  const getCollabTypeLabel = (value: string) => {
+    const collabTypes = [
+      { value: "sponsored-post", label: "Sponsored Post" },
+      { value: "affiliate-marketing", label: "Affiliate Marketing" },
+      { value: "product-review", label: "Product Review" },
+      { value: "brand-ambassador", label: "Brand Ambassador" },
+      { value: "content-creation", label: "Content Creation" },
+      { value: "social-media-takeover", label: "Social Media Takeover" },
+    ];
+    const type = collabTypes.find(type => type.value === value);
+    return type ? type.label : value;
+  };
+
+  const generateHardcodedResponse = (userMessage: string) => {
+    const responses = [
+      "That's interesting! Tell me more.",
+      "I understand. What else is on your mind?",
+      "Great point! I'll keep that in mind.",
+      "I appreciate your perspective on this.",
+      "Let's explore that idea further.",
+      "I hadn't thought of it that way before.",
+    ];
+
+    return responses[Math.floor(Math.random() * responses.length)];
+  };
+
+  const handleSendMessage = () => {
+    if (!chat) return;
+    if (newMessage.trim() === "" && !selectedImage && !selectedFile) return;
+
+    const now = new Date();
+    const timeString = now.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    const userMessage: Message = {
+      id:
+        (chat.messages.length > 0
+          ? Math.max(...chat.messages.map((m) => m.id))
+          : 0) + 1,
+      content: newMessage,
+      sender: "self",
+      timestamp: timeString,
+    };
+
+    if (selectedImage) {
+      const imageUrl = URL.createObjectURL(selectedImage);
+      userMessage.imageUrl = imageUrl;
+      if (!newMessage.trim()) {
+        userMessage.content = "";
+      }
+    }
+
+    if (selectedFile) {
+      const fileUrl = URL.createObjectURL(selectedFile);
+      userMessage.fileUrl = fileUrl;
+      userMessage.fileName = selectedFile.name;
+      if (!newMessage.trim()) {
+        userMessage.content = `Sent a file: ${selectedFile.name}`;
+      }
+    }
+
+    const updatedMessages = [...chat.messages, userMessage];
+    const updatedChat = {
+      ...chat,
+      messages: updatedMessages,
+    };
+
+    setChat(updatedChat);
+    if (onChatUpdate) {
+      onChatUpdate(updatedChat);
+    }
+
+    // Send message through WebSocket
+    sendWebSocketMessage({
+      type: 'chat_message',
+      chatId: chat.id,
+      message: userMessage,
+    });
+
+    setNewMessage("");
+    setSelectedImage(null);
+    setSelectedFile(null);
+
+    // Simulate a response (optional, for demo)
+    setTimeout(() => {
+      const responseContent = generateHardcodedResponse(userMessage.content);
+      const responseTime = new Date();
+      const responseTimeString = responseTime.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+      const responseMessage: Message = {
+        id:
+          (updatedMessages.length > 0
+            ? Math.max(...updatedMessages.map((m) => m.id))
+            : 0) + 1,
+        content: responseContent,
+        sender: "other",
+        timestamp: responseTimeString,
+      };
+
+      const updatedChatWithResponse = {
+        ...chat,
+        messages: [...updatedMessages, responseMessage],
+      };
+
+      setChat(updatedChatWithResponse);
+      if (onChatUpdate) {
+        onChatUpdate(updatedChatWithResponse);
+      }
+    }, 1000);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
+  const handleFileUpload = (type: "image" | "file") => {
+    if (fileInputRef.current) {
+      // Set accept attribute based on type
+      if (type === "image") {
+        fileInputRef.current.accept = "image/*";
+      } else {
+        fileInputRef.current.accept = "*/*";
+      }
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+
+      if (file.type.startsWith("image/")) {
+        setSelectedImage(file);
+        setSelectedFile(null);
+      } else {
+        setSelectedFile(file);
+        setSelectedImage(null);
+      }
+
+      e.target.value = "";
+    }
+  };
+
+  const removeSelectedImage = () => {
+    setSelectedImage(null);
+  };
+
+  const removeSelectedFile = () => {
+    setSelectedFile(null);
+  };
+
+  const handleVoiceRecording = async () => {
+    if (!isRecording) {
+      // Start recording
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      const chunks: BlobPart[] = [];
+
+      mediaRecorder.ondataavailable = (e) => {
+        chunks.push(e.data);
+      };
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(chunks, { type: "audio/webm" });
+        setAudioBlob(blob);
+        setAudioUrl(URL.createObjectURL(blob));
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+    } else {
+      // Stop recording
+      mediaRecorderRef.current?.stop();
+      setIsRecording(false);
+    }
+  };
+
+  const toggleForm = () => {
+    setShowForm(!showForm);
+    if (!showForm) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
+    }
+  };
+
+  const toggleAwardForm = () => {
+    setShowAwardForm(!showAwardForm);
+    if (!showAwardForm) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
+    }
+  };
+
+  const handleCollabFormSubmit = (formData: CollaborationFormData) => {
+    if (!chat) return;
+    const now = new Date();
+    const timeString = now.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    // Create a new message with the collaboration request
+    const collabMessage: Message = {
+      id:
+        (chat.messages.length > 0
+          ? Math.max(...chat.messages.map((m) => m.id))
+          : 0) + 1,
+      content: "",
+      sender: "self",
+      timestamp: timeString,
+      isCollabRequest: true,
+      collabData: formData,
+      collabAccepted: false,
+    };
+
+    const updatedMessages = [...chat.messages, collabMessage];
+    const updatedChat = {
+      ...chat,
+      messages: updatedMessages,
+    };
+
+    setChat(updatedChat);
+    if (onChatUpdate) {
+      onChatUpdate(updatedChat);
+    }
+
+    // Close the form
+    setShowForm(false);
+  };
+
+  const handleAcceptProject = (messageId: number) => {
+    if (!chat) return;
+    const updatedMessages = chat.messages.map((message) => {
+      if (message.id === messageId) {
+        return {
+          ...message,
+          collabAccepted: true,
+        };
+      }
+      return message;
+    });
+
+    const updatedChat = {
+      ...chat,
+      messages: updatedMessages,
+    };
+
+    setChat(updatedChat);
+    if (onChatUpdate) {
+      onChatUpdate(updatedChat);
+    }
+  };
+
+  // All useEffects at the top level
   useEffect(() => {
     // Check if it's a mobile device
     const checkIfMobile = () => {
@@ -123,6 +393,71 @@ export default function ChatWindow({
       .padStart(2, "0")}`;
   };
 
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleWebSocketMessage = (data: any) => {
+      if (data.type === 'chat_message' && data.chatId === chat?.id) {
+        const updatedMessages = [...(chat?.messages || []), data.message];
+        const updatedChat = {
+          ...chat!,
+          messages: updatedMessages,
+        };
+        setChat(updatedChat);
+        if (onChatUpdate) {
+          onChatUpdate(updatedChat);
+        }
+      }
+    };
+
+    socket.on('message', handleWebSocketMessage);
+
+    return () => {
+      socket.off('message', handleWebSocketMessage);
+    };
+  }, [socket, chat, onChatUpdate]);
+
+  const handleSendAudio = () => {
+    if (!audioBlob) return;
+    if (!chat) return;
+    const now = new Date();
+    const timeString = now.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    const audioMessage: Message = {
+      id: (chat.messages.length > 0
+        ? Math.max(...chat.messages.map((m) => m.id))
+        : 0) + 1,
+      content: "", // or "Audio message"
+      sender: "self",
+      timestamp: timeString,
+      fileUrl: audioUrl!,
+      fileName: "audio-message.webm",
+    };
+
+    const updatedMessages = [...chat.messages, audioMessage];
+    const updatedChat = {
+      ...chat,
+      messages: updatedMessages,
+    };
+
+    setChat(updatedChat);
+    if (onChatUpdate) {
+      onChatUpdate(updatedChat);
+    }
+
+    sendWebSocketMessage({
+      type: "chat_message",
+      chatId: chat.id,
+      message: audioMessage,
+    });
+
+    setAudioBlob(null);
+    setAudioUrl(null);
+  };
+
   if (!chat) {
     return (
       <div className="flex-1 bg-[#0E0E0E] flex items-center justify-center h-[100dvh] md:h-full">
@@ -132,256 +467,6 @@ export default function ChatWindow({
       </div>
     );
   }
-
-  // Function to get the display name of a collaboration type
-  const getCollabTypeLabel = (value: string) => {
-    const collabTypes = [
-      { value: "sponsored-post", label: "Sponsored Post" },
-      { value: "affiliate-marketing", label: "Affiliate Marketing" },
-      { value: "product-review", label: "Product Review" },
-      { value: "brand-ambassador", label: "Brand Ambassador" },
-      { value: "content-creation", label: "Content Creation" },
-      { value: "social-media-takeover", label: "Social Media Takeover" },
-    ];
-    const type = collabTypes.find((type) => type.value === value);
-    return type ? type.label : value;
-  };
-
-  const generateHardcodedResponse = (userMessage: string) => {
-    const responses = [
-      "That's interesting! Tell me more.",
-      "I understand. What else is on your mind?",
-      "Great point! I'll keep that in mind.",
-      "I appreciate your perspective on this.",
-      "Let's explore that idea further.",
-      "I hadn't thought of it that way before.",
-    ];
-
-    return responses[Math.floor(Math.random() * responses.length)];
-  };
-
-  const handleSendMessage = () => {
-    if (newMessage.trim() === "" && !selectedImage && !selectedFile) return;
-
-    const now = new Date();
-    const timeString = now.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-
-    const userMessage: Message = {
-      id:
-        (chat.messages.length > 0
-          ? Math.max(...chat.messages.map((m) => m.id))
-          : 0) + 1,
-      content: newMessage,
-      sender: "self",
-      timestamp: timeString,
-    };
-
-    if (selectedImage) {
-      const imageUrl = URL.createObjectURL(selectedImage);
-      userMessage.imageUrl = imageUrl;
-
-      if (!newMessage.trim()) {
-        userMessage.content = "";
-      }
-    }
-
-    if (selectedFile) {
-      const fileUrl = URL.createObjectURL(selectedFile);
-      userMessage.fileUrl = fileUrl;
-      userMessage.fileName = selectedFile.name;
-
-      if (!newMessage.trim()) {
-        userMessage.content = `Sent a file: ${selectedFile.name}`;
-      }
-    }
-
-    const updatedMessages = [...chat.messages, userMessage];
-
-    const updatedChat = {
-      ...chat,
-      messages: updatedMessages,
-    };
-
-    setChat(updatedChat);
-    if (onChatUpdate) {
-      onChatUpdate(updatedChat);
-    }
-
-    // Call API to send message if onSendMessage prop is provided and we have a communityId
-    if (onSendMessage && chat.communityId && newMessage.trim()) {
-      onSendMessage(chat.communityId, newMessage.trim()).catch((error) => {
-        console.error("Error sending message:", error);
-      });
-    } else {
-      // For non-API chats, use the fake response
-      setTimeout(() => {
-        const responseContent = generateHardcodedResponse(userMessage.content);
-        const responseTime = new Date();
-        const responseTimeString = responseTime.toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-
-        const responseMessage: Message = {
-          id:
-            (updatedMessages.length > 0
-              ? Math.max(...updatedMessages.map((m) => m.id))
-              : 0) + 1,
-          content: responseContent,
-          sender: "other",
-          timestamp: responseTimeString,
-        };
-
-        const updatedChatWithResponse = {
-          ...chat,
-          messages: [...updatedMessages, responseMessage],
-        };
-
-        setChat(updatedChatWithResponse);
-        if (onChatUpdate) {
-          onChatUpdate(updatedChatWithResponse);
-        }
-      }, 1000);
-    }
-
-    setNewMessage("");
-    setSelectedImage(null);
-    setSelectedFile(null);
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
-
-  const handleFileUpload = (type: "image" | "file") => {
-    if (fileInputRef.current) {
-      // Set accept attribute based on type
-      if (type === "image") {
-        fileInputRef.current.accept = "image/*";
-      } else {
-        fileInputRef.current.accept = "*/*";
-      }
-      fileInputRef.current.click();
-    }
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      const file = files[0];
-
-      if (file.type.startsWith("image/")) {
-        setSelectedImage(file);
-        setSelectedFile(null);
-      } else {
-        setSelectedFile(file);
-        setSelectedImage(null);
-      }
-
-      e.target.value = "";
-    }
-  };
-
-  const removeSelectedImage = () => {
-    setSelectedImage(null);
-  };
-
-  const removeSelectedFile = () => {
-    setSelectedFile(null);
-  };
-
-  const handleVoiceRecording = () => {
-    setIsRecording(!isRecording);
-    if (!isRecording) {
-      console.log("Starting voice recording...");
-    } else {
-      console.log("Stopping voice recording...");
-    }
-  };
-
-  const toggleForm = () => {
-    setShowForm(!showForm);
-    if (!showForm) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "auto";
-    }
-  };
-
-  const toggleAwardForm = () => {
-    setShowAwardForm(!showAwardForm);
-    if (!showAwardForm) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "auto";
-    }
-  };
-
-  // Handle collaboration form submission
-  const handleCollabFormSubmit = (formData: CollaborationFormData) => {
-    const now = new Date();
-    const timeString = now.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-
-    // Create a new message with the collaboration request
-    const collabMessage: Message = {
-      id:
-        (chat.messages.length > 0
-          ? Math.max(...chat.messages.map((m) => m.id))
-          : 0) + 1,
-      content: "",
-      sender: "self",
-      timestamp: timeString,
-      isCollabRequest: true,
-      collabData: formData,
-      collabAccepted: false,
-    };
-
-    const updatedMessages = [...chat.messages, collabMessage];
-    const updatedChat = {
-      ...chat,
-      messages: updatedMessages,
-    };
-
-    setChat(updatedChat);
-    if (onChatUpdate) {
-      onChatUpdate(updatedChat);
-    }
-
-    // Close the form
-    setShowForm(false);
-  };
-
-  // Handle accepting a collaboration project
-  const handleAcceptProject = (messageId: number) => {
-    const updatedMessages = chat.messages.map((message) => {
-      if (message.id === messageId) {
-        return {
-          ...message,
-          collabAccepted: true,
-        };
-      }
-      return message;
-    });
-
-    const updatedChat = {
-      ...chat,
-      messages: updatedMessages,
-    };
-
-    setChat(updatedChat);
-    if (onChatUpdate) {
-      onChatUpdate(updatedChat);
-    }
-  };
 
   return (
     <div className="flex-1 bg-[#0E0E0E] flex flex-col h-screen md:h-full relative">
@@ -456,35 +541,25 @@ export default function ChatWindow({
               // Collaboration Request Card
               <div className="max-w-[300px] bg-[#DBDBDB0A] rounded-lg overflow-hidden shadow-lg">
                 <div className="p-4 space-y-2 text-white">
-                  <h3 className="font-bold">
-                    Collab Request: {message.collabData.collaborationRequest}
-                  </h3>
+                  <h3 className="font-bold">Collab Request: {message.collabData.collaborationRequest}</h3>
                   <p className="text-sm text-gray-300">
-                    Collab Type:{" "}
-                    {message.collabData.collaborationTypes.length > 0
-                      ? getCollabTypeLabel(
-                          message.collabData.collaborationTypes[0]
-                        )
+                    Collab Type: {message.collabData.collaborationTypes.length > 0 
+                      ? getCollabTypeLabel(message.collabData.collaborationTypes[0]) 
                       : "Not specified"}
                   </p>
                   <p className="text-sm text-gray-300">
-                    Deadline:{" "}
-                    {message.collabData.deadline
-                      ? new Date(
-                          message.collabData.deadline
-                        ).toLocaleDateString()
+                    Deadline: {message.collabData.deadline 
+                      ? new Date(message.collabData.deadline).toLocaleDateString() 
                       : "Not specified"}
                   </p>
                   <p className="text-sm text-gray-300">
                     Budget: ${message.collabData.price || "0"} (Funded)
                   </p>
-
+                  
                   {message.collabAccepted ? (
                     <div className="bg-none text-white px-4 py-2 rounded flex items-center justify-center gap-2">
                       <Check size={16} />
-                      <span>
-                        Project accepted! Please share all the details here
-                      </span>
+                      <span>Project accepted! Please share all the details here</span>
                     </div>
                   ) : (
                     <Button
@@ -532,34 +607,11 @@ export default function ChatWindow({
                 )}
 
                 {/* File attachment */}
+                {message.fileUrl && message.fileName && message.fileName.match(/\.(webm|mp3|wav)$/) && (
+                  <audio controls src={message.fileUrl} className="my-2" />
+                )}
                 {message.fileUrl && message.fileName && (
-                  <div className="mt-2 flex items-center bg-gray-800/30 rounded-lg p-2">
-                    <div className="bg-gray-700 p-2 rounded-lg mr-2">
-                      <svg
-                        className="w-5 h-5 text-gray-300"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </div>
-                    <div className="overflow-hidden">
-                      <p className="text-xs text-gray-200 truncate">
-                        {message.fileName}
-                      </p>
-                      <a
-                        href={message.fileUrl}
-                        download={message.fileName}
-                        className="text-[10px] text-blue-400 hover:underline"
-                      >
-                        Download
-                      </a>
-                    </div>
-                  </div>
+                  <a href={message.fileUrl} download={message.fileName} className="text-blue-400 underline ml-2">Download</a>
                 )}
               </div>
             )}
@@ -619,6 +671,13 @@ export default function ChatWindow({
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {audioUrl && (
+        <div className="my-2">
+          <audio controls src={audioUrl}></audio>
+          <Button onClick={handleSendAudio}>Send Audio</Button>
         </div>
       )}
 
@@ -718,9 +777,9 @@ export default function ChatWindow({
           <div className="fixed top-0 right-0 h-full w-full md:w-[450px] bg-[#0E0E0E] shadow-lg overflow-y-auto animate-slide-in">
             <div className="flex justify-between items-center p-4 pt-6" />
             <div className="px-4 pb-6">
-              <CollaborationForm
-                isFromChat={true}
-                onClose={toggleForm}
+              <CollaborationForm 
+                isFromChat={true} 
+                onClose={toggleForm} 
                 onSubmit={handleCollabFormSubmit}
               />
             </div>
