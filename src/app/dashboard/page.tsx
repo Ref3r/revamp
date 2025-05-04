@@ -152,18 +152,6 @@ const Dashboard = () => {
       {/* Fixed Header/Wallet Balance */}
       <div className="fixed top-0 left-0 right-0 z-20 px-3 lg:pl-20">
         <WalletBalance />
-
-        {/* Debug button - only in development */}
-        {process.env.NODE_ENV !== "production" && (
-          <div className="absolute top-2 right-4">
-            <button
-              onClick={handleCheckAuth}
-              className="text-xs px-2 py-1 bg-gray-800 text-gray-300 rounded hover:bg-gray-700"
-            >
-              Check Auth
-            </button>
-          </div>
-        )}
       </div>
 
       {/* Main Content */}
