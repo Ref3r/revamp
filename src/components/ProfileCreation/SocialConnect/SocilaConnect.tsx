@@ -1,7 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import { Button } from "@lemonsqueezy/wedges";
 import { FacebookIcon, Linkedin, LinkedinIcon, LucideLinkedin, TwitterIcon } from "lucide-react";
+import axios from "axios";
+import toast from "react-hot-toast";
 
 interface SocialPlatform {
   identifier: string;
@@ -24,9 +26,9 @@ const SocialConnect: React.FC<SocialConnectProps> = ({ onConnect }) => {
   useEffect(() => {
     const fetchSocialPlatforms = async () => {
       try {
-        const response = await fetch("http://localhost:4002/integrate");
-        const data = await response.json();
-        setPlatforms(data);
+        const items = await axios.get("http://localhost:4200/integrations");
+        console.log("integrations", items.data);
+        setPlatforms(items.data.social);
       } catch (error) {
         console.error("Failed to fetch social platforms:", error);
       } finally {
@@ -68,6 +70,33 @@ const SocialConnect: React.FC<SocialConnectProps> = ({ onConnect }) => {
     return iconMap[identifier] || "/default-icon.svg";
   };
 
+  const getSocialLink = useCallback(
+    (identifier: string) =>
+      async () => {
+        console.log("identifier", identifier);
+        const gotoIntegration = async (externalUrl?: string) => {
+          const { url, err } = ( await axios.get(
+              `http://localhost:4200/integrations/social/${identifier}${
+                externalUrl ? `?externalUrl=${externalUrl}` : ``
+              }`
+            )).data;
+
+          console.log("gotoIntegration", url, err);
+
+          if (err) {
+            toast.error('Could not connect to the platform');
+            return;
+          }
+          window.location.href = url;
+        };
+
+        console.log("gotoIntegration", "url");
+
+        await gotoIntegration();
+      },
+    []
+  );
+
   if (loading) {
     return <div className="text-center">Loading social platforms...</div>;
   }
@@ -77,7 +106,7 @@ const SocialConnect: React.FC<SocialConnectProps> = ({ onConnect }) => {
       {platforms.map((platform) => (
         <Button
           key={platform.identifier}
-          onClick={() => handleConnect(platform)}
+          onClick={getSocialLink(platform.identifier)}
           className="w-full p-4 bg-[#0E0E0E] border border-white/20 rounded-lg text-white 
           hover:bg-[#1a1a1a] transition-colors shadow-[0_1px_2px_rgba(18,18,23,0.05)]"
         >

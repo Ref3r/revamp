@@ -20,15 +20,12 @@ export const IntegrationRedirectComponent = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  console.log(pathname, searchParams.toString(), offset);
-
   const newUrl = `${pathname}/continue?${searchParams.toString()}&timezone=${offset}`;
 
   useEffect(() => {
     async function continueIntegration() {
       const response = await apiClient.get("/users/me");
       const userId = response?.data?.user?._id;
-      console.log("userId", userId);
 
       router.push(newUrl + `&userId=${userId}`);
     }

@@ -1,10 +1,14 @@
-import { HttpStatusCode } from 'axios';
+import { HttpStatusCode } from "axios";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-import { redirect } from 'next/navigation';
+import { redirect } from "next/navigation";
 import { internalFetch } from "@/utils/internal.fetch";
 import { Redirect } from "@/components/redirect";
+import { useQuery } from "@tanstack/react-query";
+import { getAuthToken } from "@/utils/auth";
+import apiClient from "@/utils/apiClient";
+import router from "next/router";
 
 export default async function Page({
   params,
@@ -17,25 +21,21 @@ export default async function Page({
 
   let searchParams2 = await searchParams;
 
-  if (provider === 'x') {
+  const userId = searchParams2?.userId;
+
+  if (provider === "x") {
     searchParams2 = {
       ...searchParams2,
-      state: searchParams2?.oauth_token || '',
-      code: searchParams2?.oauth_verifier || '',
-      refresh: searchParams2?.refresh || '',
+      state: searchParams2?.oauth_token || "",
+      code: searchParams2?.oauth_verifier || "",
+      refresh: searchParams2?.refresh || "",
+      codeVerifier: searchParams2?.code_verifier || "",
     };
   }
 
-  if (provider === 'vk') {
-    searchParams2 = {
-      ...searchParams2,
-      state: searchParams2?.state || '',
-      code: searchParams2?.code + '&&&&' + searchParams2?.device_id
-    };
-  }
 
-  const data = await internalFetch(`/integrations/social/${provider}/connect`, {
-    method: 'POST',
+  const data = await internalFetch(`/integrate/${provider}?userId=${userId}`, {
+    method: "POST",
     body: JSON.stringify(searchParams2),
   });
 
