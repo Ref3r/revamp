@@ -13,6 +13,10 @@ export interface RegisterPayload {
   password: string;
 }
 
+export interface GoogleAuthPayload {
+  idToken: string;
+}
+
 export interface ForgotPasswordPayload {
   email: string;
 }
@@ -26,6 +30,7 @@ export interface AuthResponse {
   success: boolean;
   token?: string;
   message?: string;
+  isNewUser?: boolean;
 }
 
 // API URL - should be set in .env
@@ -142,6 +147,51 @@ export async function registerUser(
     return {
       success: false,
       message: error instanceof Error ? error.message : "Registration failed",
+    };
+  }
+}
+
+/**
+ * Authenticate with Google
+ * @param payload - Google authentication token
+ * @returns Authentication response
+ */
+export async function googleAuth(
+  payload: GoogleAuthPayload
+): Promise<AuthResponse> {
+  try {
+    const response = await apiClient.post(`/auth/google`, payload, {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    });
+
+    const data = response.data;
+
+    if (response.status !== 200 && response.status !== 201) {
+      throw new Error(data.message || "Google authentication failed");
+    }
+
+    // Verify we received a token
+    if (!data.token) {
+      throw new Error("No authentication token received");
+    }
+
+    // Store the token
+    setAuthToken(data.token);
+
+    return {
+      success: true,
+      token: data.token,
+      message: data.message || "Google authentication successful",
+      isNewUser: data.isNewUser,
+    };
+  } catch (error) {
+    console.error("Google authentication error:", error);
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : "Google authentication failed",
     };
   }
 }

@@ -4,7 +4,7 @@ import { Button, Input, Label } from "@lemonsqueezy/wedges";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function LoginForm() {
@@ -18,6 +18,13 @@ export default function LoginForm() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [apiBaseUrl, setApiBaseUrl] = useState("");
+
+  useEffect(() => {
+    // Get API base URL from environment variables
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api/v1";
+    setApiBaseUrl(baseUrl);
+  }, []);
 
   // Reset form fields when switching modes
   const resetForm = () => {
@@ -149,6 +156,19 @@ export default function LoginForm() {
     }
   };
 
+  // Handle Google login
+  const handleGoogleLogin = () => {
+    if (!apiBaseUrl) {
+      setError("API URL is not configured");
+      return;
+    }
+
+    // Redirect to the backend's Google OAuth endpoint
+    // The backend will handle the OAuth flow and redirect back
+    // to our Google callback page
+    window.location.href = `${apiBaseUrl.replace('/api/v1', '')}/auth/google`;
+  };
+
   // Title based on current mode
   const getFormTitle = () => {
     if (isForgotPassword) return "Reset Password";
@@ -191,7 +211,7 @@ export default function LoginForm() {
                 type="email"
                 id="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => setEmail((e.target as HTMLInputElement).value)}
                 placeholder="your@email.com"
                 required
                 className="w-full bg-[#0E0E0E] border border-[#FFFFFF33] text-white py-3 rounded-lg shadow-[0_1px_2px_0_rgba(18,18,23,0.05)]"
@@ -237,7 +257,7 @@ export default function LoginForm() {
                 type="email"
                 id="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => setEmail((e.target as HTMLInputElement).value)}
                 placeholder="your@email.com"
                 required
                 className="w-full bg-[#0E0E0E] border border-[#FFFFFF33] text-white py-3 rounded-lg shadow-[0_1px_2px_0_rgba(18,18,23,0.05)]"
@@ -258,7 +278,7 @@ export default function LoginForm() {
                 type="password"
                 id="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => setPassword((e.target as HTMLInputElement).value)}
                 placeholder="********"
                 required
                 className="w-full bg-[#0E0E0E] border border-[#FFFFFF33] text-white py-3 rounded-lg shadow-[0_1px_2px_0_rgba(18,18,23,0.05)]"
@@ -293,7 +313,7 @@ export default function LoginForm() {
                   type="password"
                   id="confirmPassword"
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  onChange={(e) => setConfirmPassword((e.target as HTMLInputElement).value)}
                   placeholder="********"
                   required
                   className="w-full bg-[#0E0E0E] border border-[#FFFFFF33] text-white py-3 rounded-lg shadow-[0_1px_2px_0_rgba(18,18,23,0.05)]"
@@ -341,6 +361,7 @@ export default function LoginForm() {
             <Button
               type="button"
               variant="outline"
+              onClick={handleGoogleLogin}
               className="w-full bg-[#0E0E0E border border-[#FFFFFF] text-white hover:bg-[#FFFFFF0D] py-2 flex items-center justify-center gap-3 rounded-lg"
             >
               <div className="flex gap-3">
@@ -351,7 +372,7 @@ export default function LoginForm() {
                   height={20}
                   className="object-contain"
                 />
-                <span>Google Sign-in</span>
+                <span>Sign in with Google</span>
               </div>
             </Button>
           </form>
