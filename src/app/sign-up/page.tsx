@@ -1,6 +1,9 @@
-// app/sign-up/page.tsx
-import LoginForm from "@/components/Auth/LoginForm";
+"use client";
+
+import SignupComponent from "@/components/Auth/SignupComponent";
+import { useRouter } from "next/navigation";
 
 export default function Page() {
-  return <LoginForm />;
+  const router = useRouter();
+  return <SignupComponent onToggleLogin={() => router.push("/login")} />;
 }
