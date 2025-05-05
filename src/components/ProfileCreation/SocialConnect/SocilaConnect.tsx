@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import { Button } from "@lemonsqueezy/wedges";
-import { FacebookIcon, Linkedin, LinkedinIcon, LucideLinkedin, TwitterIcon } from "lucide-react";
+import { FacebookIcon, Linkedin, LinkedinIcon, LucideLinkedin, TwitterIcon, CheckCircle } from "lucide-react";
 import axios from "axios";
 import toast from "react-hot-toast";
 
@@ -21,13 +21,15 @@ interface SocialConnectProps {
 
 const SocialConnect: React.FC<SocialConnectProps> = ({ onConnect }) => {
   const [platforms, setPlatforms] = useState<SocialPlatform[]>([]);
+  const [myIntegrations, setMyIntegrations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchSocialPlatforms = async () => {
       try {
         const items = await axios.get("http://localhost:4200/integrations");
-        console.log("integrations", items.data);
+        const myIntegrations = await axios.get("http://localhost:4200/integrations/list");
+        setMyIntegrations(myIntegrations.data.integrations);
         setPlatforms(items.data.social);
       } catch (error) {
         console.error("Failed to fetch social platforms:", error);
@@ -97,36 +99,54 @@ const SocialConnect: React.FC<SocialConnectProps> = ({ onConnect }) => {
     []
   );
 
+  const isConnected = (identifier: string) => {
+    return myIntegrations.some(integration => integration.identifier === identifier);
+  };
+
   if (loading) {
     return <div className="text-center">Loading social platforms...</div>;
   }
 
   return (
     <div className="space-y-6 mx-auto max-w-md">
-      {platforms.map((platform) => (
-        <Button
-          key={platform.identifier}
-          onClick={getSocialLink(platform.identifier)}
-          className="w-full p-4 bg-[#0E0E0E] border border-white/20 rounded-lg text-white 
-          hover:bg-[#1a1a1a] transition-colors shadow-[0_1px_2px_rgba(18,18,23,0.05)]"
-        >
-          <div className="flex justify-center items-center gap-2">
-            <div className="w-5">
-              {typeof getIconPath(platform.identifier) === "string" ? (
-                <Image
-                  src={getIconPath(platform.identifier)}
-                  alt={platform.name}
-                  width={16}
-                  height={16}
-                />
-              ) : (
-                getIconPath(platform.identifier)
+      {platforms.map((platform) => {
+        const connected = isConnected(platform.identifier);
+        return (
+          <Button
+            key={platform.identifier}
+            onClick={connected ? undefined : getSocialLink(platform.identifier)}
+            disabled={connected}
+            className={`w-full p-4 rounded-lg text-white relative overflow-hidden
+            transition-colors ${
+              connected 
+                ? "bg-[#111] border border-green-500/40" 
+                : "bg-[#0E0E0E] border border-white/20 hover:bg-[#1a1a1a]"
+            }`}
+          >
+            <div className="flex items-center justify-center gap-3">
+              <div className="w-5 h-5 flex items-center justify-center">
+                {typeof getIconPath(platform.identifier) === "string" ? (
+                  <Image
+                    src={getIconPath(platform.identifier)}
+                    alt={platform.name}
+                    width={16}
+                    height={16}
+                  />
+                ) : (
+                  getIconPath(platform.identifier)
+                )}
+              </div>
+              <span className="text-sm">{platform.name}</span>
+              {connected && (
+                <div className="text-green-500 flex items-center gap-1.5 ml-1">
+                  <CheckCircle className="w-4 h-4" />
+                  <span className="text-sm font-medium">Connected</span>
+                </div>
               )}
             </div>
-            <span className="text-sm">{platform.name}</span>
-          </div>
-        </Button>
-      ))}
+          </Button>
+        );
+      })}
     </div>
   );
 };

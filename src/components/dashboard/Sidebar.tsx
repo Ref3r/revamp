@@ -107,7 +107,7 @@ const Sidebar = ({ isMobile = false }) => {
                 Profile
               </Link>
               <Link 
-                href="/connect" 
+                href="/socials" 
                 className="flex items-center px-4 py-2 text-sm text-white hover:bg-[#2A2A2A]"
               >
                 <Share2 size={16} className="mr-2" />
@@ -191,7 +191,7 @@ const Sidebar = ({ isMobile = false }) => {
                 Profile
               </Link>
               <Link 
-                href="/connect" 
+                href="/socials" 
                 className="flex items-center px-4 py-2 text-sm text-white hover:bg-[#2A2A2A]"
               >
                 <Share2 size={16} className="mr-2" />

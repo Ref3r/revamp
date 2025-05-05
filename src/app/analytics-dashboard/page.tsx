@@ -1,3 +1,4 @@
+"use client"
 // page.tsx
 import React from "react";
 import Header from "@/components/analytics-dashboard/Header";
@@ -6,8 +7,31 @@ import AgeSegmentation from "@/components/analytics-dashboard/Age-segmentation";
 import Leaderboard from "@/components/analytics-dashboard/Leaderboard";
 import Sidebar from "@/components/dashboard/Sidebar";
 import FollowerCharts from "@/components/public-view-dashboard/PartnershipsSection";
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
 
 const Page = () => {
+  const {data: integrations} = useQuery({
+    queryKey: ["integrations"],
+    queryFn: async () => {
+      const items = await axios.get("http://localhost:4200/integrations/list");
+      return items.data.integrations;
+    }
+  })
+
+  const firstIntegration = integrations?.[0];
+
+  const {data: analyticsData} = useQuery({
+    queryKey: ["integrationData", firstIntegration?.id],
+    queryFn: async () => {
+      const items = await axios.get(`http://localhost:4200/analytics/${firstIntegration?.id}`);
+      return items.data;
+    },
+    enabled: !!firstIntegration?.id
+  })
+
+  console.log("analyticsData", analyticsData);
+  
   return (
     <div className="bg-[#0E0E0E] min-h-screen flex">
       <div className="fixed left-3 top-0 bottom-0 z-30 hidden lg:block w-16">

@@ -37,7 +37,7 @@ export interface AuthResponse {
 const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 // Remove trailing /api/v1 if present
 const API_URL = rawApiUrl.endsWith("/api/v1")
-  ? rawApiUrl.slice(0, -8)
+  ? rawApiUrl.slice(0, -7)
   : rawApiUrl;
 
 // Base API path for auth endpoints
