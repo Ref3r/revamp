@@ -16,6 +16,7 @@ import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import apiClient from "@/utils/apiClient";
 import { useAuth } from "@/contexts/AuthContext";
+import { getPlaceholderImage } from "@/utils/placeholder";
 
 interface PostProps {
   post: {
@@ -158,7 +159,7 @@ const Post = ({ post }: PostProps) => {
       <div className="bg-[#1A1919] rounded-[20px] p-4">
         <div className="flex items-center mb-4">
           <Image
-            src={false || "/user-profile-photo.svg"}
+            src={post.author?.profilePicture || getPlaceholderImage(post.author?.name)}
             width={42}
             height={42}
             alt="User profile"

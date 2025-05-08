@@ -4,6 +4,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import CollaborationForm from "../chat-section/collab-request-form/CollaborationForm ";
 import { X } from "lucide-react";
+import { getPlaceholderImage } from "@/utils/placeholder";
 
 interface ProfileBoxProps {
   isPublicView?: boolean;
@@ -64,28 +65,30 @@ const ProfileBox = ({
     );
   }
 
+  console.log(userData, "userData?.profilePicture");
+
   return (
     <div className="w-full">
       <div className="bg-[#1A1919] rounded-[20px] p-4">
         <div className="flex items-start gap-3">
           <div>
             <Image
-              src={profilePic}
+              src={userData?.profilePicture || getPlaceholderImage(username)}
               width={50}
               height={50}
               alt="Profile photo"
-              className="rounded-full"
+              className="rounded-full object-cover"
             />
           </div>
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
               <h1 className="text-white font-bold">{username}</h1>
-              <div className="border border-white rounded-full px-2 py-0.5 text-[8px] text-white bg-[#0E0E0E]">
+              {/* <div className="border border-white rounded-full px-2 py-0.5 text-[8px] text-white bg-[#0E0E0E]">
                 Rank {rank}
-              </div>
+              </div> */}
             </div>
             <p className="text-sm text-[#FFFFFF7A] font-normal mt-1">{bio}</p>
-            <div className="flex items-center mt-1">
+            {/* <div className="flex items-center mt-1">
               <Image
                 src="/gold-medal.svg"
                 width={16}
@@ -96,7 +99,7 @@ const ProfileBox = ({
               <p className="text-white text-xs">
                 Voted #1 in Design Community
               </p>
-            </div>
+            </div> */}
           </div>
         </div>
 

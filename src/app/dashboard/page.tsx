@@ -114,16 +114,16 @@ const Dashboard = () => {
       </div>
 
       {/* Fixed Header/Wallet Balance */}
-      <div className="fixed top-0 left-0 right-0 z-20 px-3 lg:pl-20">
+      {/* <div className="fixed top-0 left-0 right-0 z-20 px-3 lg:pl-20">
         <WalletBalance />
-      </div>
+      </div> */}
 
       {/* Main Content */}
-      <div className="pt-20 px-3 lg:pl-24 lg:pr-4 pb-16 lg:pb-4">
+      <div className="pt-2 px-3 lg:pl-24 lg:pr-4 pb-16 lg:pb-4">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
           {/* Left Column - Only visible on large screens */}
           <div className="hidden lg:block lg:col-span-3 relative">
-            <div className="sticky top-24 space-y-4">
+            <div className="sticky top-6 space-y-4">
               <Profile_box
                 userData={userData}
                 isLoading={userLoading}
@@ -189,7 +189,7 @@ const Dashboard = () => {
 
           {/* Right Column - Only visible on large screens */}
           <div className="hidden lg:block lg:col-span-3 relative">
-            <div className="sticky top-24 space-y-4">
+            <div className="sticky top-6 space-y-4">
               <Communities />
               <div className="mt-4">
                 <RecentContests />
