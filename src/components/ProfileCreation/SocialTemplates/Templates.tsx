@@ -1,7 +1,17 @@
 import React, { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
+import SubmitButton from '../SubmitButton';
+import { useMutation } from '@tanstack/react-query';
+import { ONBOARDING_STEPS, updateOnboardingStep } from '@/services/onboardingService';
 
-const SocialTemplatesGrid = () => {
+interface SocialTemplatesGridProps {
+  onSuccess: () => void;
+  onError: () => void;
+}
+
+
+
+const SocialTemplatesGrid: React.FC<SocialTemplatesGridProps> = ({ onSuccess, onError }) => {
   const [selectedPlatform, setSelectedPlatform] = useState<keyof SelectedTemplates>('instagram');
   const [showPlatformDropdown, setShowPlatformDropdown] = useState(false);
   const [selectedTemplates, setSelectedTemplates] = useState<SelectedTemplates>({
@@ -10,6 +20,16 @@ const SocialTemplatesGrid = () => {
     youtube: [],
     tiktok: [],
     twitter: []
+  });
+
+  const mutation = useMutation({
+    mutationFn: updateOnboardingStep,
+    onSuccess: (data) => {
+      onSuccess();
+    },
+    onError: (error) => {
+      onError();
+    },
   });
   
   // Social platform options
@@ -275,6 +295,12 @@ const SocialTemplatesGrid = () => {
           );
         })}
       </div>
+
+      <SubmitButton
+        isLoading={mutation.isPending}
+        onClick={() => mutation.mutate(ONBOARDING_STEPS.TEMPLATE)}
+        disabled={mutation.isPending}
+      />
     </div>
   );
 };

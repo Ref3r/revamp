@@ -51,7 +51,7 @@ export default function GoogleCallback() {
         // Redirect based on whether this is a new user
         if (isNewUser) {
           console.log('[GoogleOAuth-Frontend] Redirecting to create profile');
-          router.push('/create-profile');
+          router.push('/onboarding');
         } else {
           console.log('[GoogleOAuth-Frontend] Redirecting to dashboard');
           router.push('/dashboard');

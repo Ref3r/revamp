@@ -45,12 +45,12 @@ export default function SignupComponent({
         if (response.token) {
           console.log("Auth token received and saved");
           // Redirect to create profile page after successful registration
-          router.push("/create-profile");
+          router.push("/onboarding");
         } else {
           // Otherwise try to login
           const loginResponse = await login({ email, password });
           if (loginResponse.success) {
-            router.push("/create-profile");
+            router.push("/onboarding");
           } else {
             setError(
               "Account created but login failed. Please try logging in manually."

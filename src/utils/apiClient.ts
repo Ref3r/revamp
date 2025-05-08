@@ -7,6 +7,7 @@ const apiClient = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: false, // Important for CORS
 });
 
 // Request interceptor to add auth token
@@ -16,6 +17,9 @@ apiClient.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    config.headers["Content-Type"] = "application/json";
+    config.headers["Access-Control-Allow-Origin"] = "*";
     return config;
   },
   (error) => Promise.reject(error)
@@ -25,7 +29,10 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
+    console.error("API response error:", error);
     if (axios.isAxiosError(error)) {
+      console.error("Response data:", error.response?.data);
+      console.error("Response status:", error.response?.status);
       throw new ServiceError(
         error.response?.data?.message || "An unexpected error occurred",
         error.response?.status || 500

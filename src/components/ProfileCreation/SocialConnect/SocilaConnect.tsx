@@ -4,6 +4,9 @@ import { Button } from "@lemonsqueezy/wedges";
 import { FacebookIcon, Linkedin, LinkedinIcon, LucideLinkedin, TwitterIcon, CheckCircle } from "lucide-react";
 import axios from "axios";
 import toast from "react-hot-toast";
+import { useMutation } from "@tanstack/react-query";
+import { ONBOARDING_STEPS, updateOnboardingStep } from "@/services/onboardingService";
+import SubmitButton from "../SubmitButton";
 
 interface SocialPlatform {
   identifier: string;
@@ -16,10 +19,21 @@ interface SocialPlatform {
 }
 
 interface SocialConnectProps {
-  onConnect: () => void;
+  onSuccess: () => void;
+  onError: () => void;
 }
 
-const SocialConnect: React.FC<SocialConnectProps> = ({ onConnect }) => {
+
+const SocialConnect: React.FC<SocialConnectProps> = ({ onSuccess, onError }) => {
+  const mutation = useMutation({
+    mutationFn: updateOnboardingStep,
+    onSuccess: (data) => {
+      onSuccess();
+    },
+    onError: (error) => {
+      onError();
+    },
+  });
   const [platforms, setPlatforms] = useState<SocialPlatform[]>([]);
   const [myIntegrations, setMyIntegrations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,22 +55,6 @@ const SocialConnect: React.FC<SocialConnectProps> = ({ onConnect }) => {
     fetchSocialPlatforms();
   }, []);
 
-  const handleConnect = (platform: SocialPlatform) => {
-    // Store codeVerifier and state in localStorage
-    localStorage.setItem(
-      `${platform.identifier}_codeVerifier`,
-      platform.link.codeVerifier
-    );
-    localStorage.setItem(`${platform.identifier}_state`, platform.link.state);
-
-    // Open the redirect URL
-    window.open(platform.link.url, "_blank");
-
-    // Notify parent component
-    onConnect();
-  };
-
-  // Map platform identifiers to corresponding icon paths
   const getIconPath = (identifier: string) => {
     const iconMap: Record<string, any> = {
       instagram: "/lucide_instagram.svg",
@@ -147,6 +145,12 @@ const SocialConnect: React.FC<SocialConnectProps> = ({ onConnect }) => {
           </Button>
         );
       })}
+
+      <SubmitButton
+        isLoading={mutation.isPending}
+        onClick={() => mutation.mutate(ONBOARDING_STEPS.SOCIAL_ACCOUNTS)}
+        disabled={mutation.isPending}
+      />
     </div>
   );
 };
