@@ -10,7 +10,6 @@ import Communities from "@/components/dashboard/Communities";
 import Engagementrate from "@/components/dashboard/Engagement-rate";
 import Partnership from "@/components/dashboard/Partnership";
 import Post from "@/components/dashboard/Post";
-import Post2 from "@/components/dashboard/Post-2";
 import WalletBalance from "@/components/dashboard/WalletBalance";
 import RecentContests from "@/components/dashboard/RecentContests";
 import DashboardMenu from "@/components/dashboard/DashboardMenu";
@@ -20,6 +19,7 @@ import { toast } from "react-hot-toast";
 import { API_BASE_URL } from "@/config/api";
 import { useQuery } from "@tanstack/react-query";
 import apiClient from "@/utils/apiClient";
+import CreatePosts from "@/components/dashboard/CreatePost";
 
 const Dashboard = () => {
   const router = useRouter();
@@ -142,7 +142,7 @@ const Dashboard = () => {
           <div className="col-span-1 lg:col-span-6">
             {/* Home Feed (Create Post) - Fixed */}
             <div className="mb-4 mt-4">
-              <Homefeed onPostCreated={fetchPosts} />
+              <CreatePosts onPostCreated={fetchPosts} />
             </div>
 
             {/* Scrollable Posts Area */}
