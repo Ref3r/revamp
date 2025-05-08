@@ -6,6 +6,7 @@ import {
   useState,
   useEffect,
   ReactNode,
+  useCallback,
 } from "react";
 import {
   getAuthToken,
@@ -23,28 +24,8 @@ import {
 } from "@/services/authService";
 import { useRouter } from "next/navigation";
 import apiClient from "@/utils/apiClient";
-
-// Base API path for auth endpoints
-const AUTH_BASE_PATH = "/api/v1/auth";
-
-interface User {
-  id?: string;
-  email?: string;
-  // Add other user properties as needed
-}
-
-interface AuthContextType {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  login: (credentials: LoginPayload) => Promise<AuthResponse>;
-  signUp: (credentials: RegisterPayload) => Promise<AuthResponse>;
-  loginWithToken: (token: string) => Promise<AuthResponse>;
-  logout: () => void;
-  forgotPassword: (payload: ForgotPasswordPayload) => Promise<AuthResponse>;
-  resetPassword: (payload: ResetPasswordPayload) => Promise<AuthResponse>;
-}
-
+import { AuthContextType, User } from "./types";
+import { toast } from "react-hot-toast";
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -52,67 +33,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
-  useEffect(() => {
-    // Check if user is already logged in
-    const checkAuth = async () => {
-      try {
-        const token = getAuthToken();
+  const checkAuth = useCallback(async () => {
+    try {
+      const token = getAuthToken();
 
-        if (token) {
-          // Here you would typically validate the token with your backend
-          // and fetch the user's information
-          // const API_URL =
-          //   process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-          // const response = await fetch(`${API_URL}/users/me`, {
-          //   headers: {
-          //     Authorization: `Bearer ${token}`,
-          //   },
-          // });
-          const response = await apiClient.get("/users/me");
+      if (token) {
+        const response = await apiClient.get("/users/me");
 
-          if (response.status === 200) {
-            const userData = await response.data;
-            setUser(userData);
-          } else {
-            // If token is invalid, remove it
-            removeAuthToken();
-            setUser(null);
+        if (response.status === 200) {
+          const user: User = response.data?.user;
+
+          if (!user.onboardingComplete) {
+            router.push("/onboarding");
           }
-        }
-      } catch (error) {
-        console.error("Error checking authentication:", error);
-        removeAuthToken();
-        setUser(null);
-      } finally {
-        setIsLoading(false);
-      }
-    };
 
+          setUser(user);
+        } else {
+          removeAuthToken();
+          setUser(null);
+          toast.error("Invalid authentication token");
+        }
+      }
+    } catch (error) {
+      removeAuthToken();
+      setUser(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [router]);
+
+  useEffect(() => {
     checkAuth();
-  }, []);
+  }, [checkAuth]);
 
   const login = async (credentials: LoginPayload): Promise<AuthResponse> => {
     try {
-      console.log("Attempting login with:", credentials.email);
       const response = await loginUser(credentials);
 
       if (response.success && response.token) {
-        console.log("Login successful, token received");
-
-        // Store the token
         setAuthToken(response.token);
-
-        // Verify token was stored correctly
-        const storedToken = getAuthToken();
-        if (storedToken) {
-          console.log("Token successfully stored in localStorage");
-        } else {
-          console.error("Failed to store token in localStorage");
-        }
-
-        // Here we would typically decode the JWT token to get basic user info
-        // For now, we're just setting a placeholder user
-        setUser({ email: credentials.email });
       } else {
         console.warn("Login failed:", response.message);
       }
@@ -147,8 +106,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.error("Failed to store token in localStorage");
         }
 
-        // Set basic user info
-        setUser({ email: credentials.email });
+       await checkAuth();
+
       } else {
         console.warn("Registration failed:", response.message);
       }
@@ -166,10 +125,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginWithToken = async (token: string): Promise<AuthResponse> => {
     try {
       console.log("Logging in with token");
-      
+
       // Store the token
       setAuthToken(token);
-      
+
       // Verify token was stored correctly
       const storedToken = getAuthToken();
       if (!storedToken) {
@@ -179,15 +138,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           message: "Failed to store authentication token",
         };
       }
-      
+
       // Attempt to get user info with the token
       try {
         const response = await apiClient.get("/users/me");
-        
+
         if (response.status === 200) {
           const userData = response.data;
           setUser(userData);
-          
+
           return {
             success: true,
             token,
@@ -197,7 +156,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // If token is invalid, remove it
           removeAuthToken();
           setUser(null);
-          
+
           return {
             success: false,
             message: "Invalid authentication token",
@@ -205,11 +164,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } catch (apiError) {
         console.error("API error when validating token:", apiError);
-        // Keep the token for now, it might just be a temporary API issue
-        
-        // Set a basic user just to continue the flow
-        setUser({ id: "unknown" });
-        
+
         return {
           success: true, // Consider it a success for now
           token,

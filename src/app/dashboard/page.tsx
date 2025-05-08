@@ -16,7 +16,6 @@ import RecentContests from "@/components/dashboard/RecentContests";
 import DashboardMenu from "@/components/dashboard/DashboardMenu";
 import ProfileBox from "@/components/dashboard/ProfileBox";
 import { getPostFeed, PostResponse } from "@/services/postService";
-import { isAuthenticated, getAuthToken, checkAuthStatus } from "@/utils/auth";
 import { toast } from "react-hot-toast";
 import { API_BASE_URL } from "@/config/api";
 import { useQuery } from "@tanstack/react-query";
@@ -31,27 +30,6 @@ const Dashboard = () => {
   // const [userLoading, setUserLoading] = useState(true);
   // const [userError, setUserError] = useState("");
 
-  // Check if user is authenticated
-  useEffect(() => {
-    // Debug authentication status
-    if (typeof window !== "undefined") {
-      // Wait a moment for any localStorage operations to complete
-      setTimeout(() => {
-        const token = getAuthToken();
-        console.log("Dashboard - Autimage.pngh Token Check:", {
-          hasToken: !!token,
-          tokenFirstChars: token ? `${token.substring(0, 10)}...` : null,
-        });
-      }, 500);
-    }
-
-    if (!isAuthenticated()) {
-      // For development, we'll just show a toast but allow access
-      // In production, uncomment the router.push line to force login
-      toast.error("You're not logged in. Using development mode.");
-      router.push("/sign-up");
-    }
-  }, [router]);
 
   const {
     refetch: fetchPosts,
@@ -70,11 +48,6 @@ const Dashboard = () => {
   } = useQuery({
     queryKey: ["userData"],
     queryFn: async () => {
-      const token = getAuthToken();
-      if (!token) {
-        throw new Error("No authentication token found");
-      }
-
       // const response = await fetch(`${API_BASE_URL}/users/me`, {
       //   headers: {
       //     Authorization: `Bearer ${token}`,
@@ -93,15 +66,6 @@ const Dashboard = () => {
     },
   });
 
-  // Debug function to check auth status
-  const handleCheckAuth = () => {
-    const status = checkAuthStatus();
-    if (status.isAuthenticated) {
-      toast.success("You are properly authenticated!");
-    } else {
-      toast.error("Not authenticated. Check console for details.");
-    }
-  };
 
   if (isLoading || userLoading) {
     return (

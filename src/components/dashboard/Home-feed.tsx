@@ -248,12 +248,12 @@ const Homefeed = ({ onPostCreated }: HomefeedProps) => {
 						</Button>
 
 						{/* Toggle advanced options button */}
-						<Button
+						{/* <Button
 							onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
 							className="bg-[#282828] hover:bg-[#383838] p-2 rounded flex items-center justify-center"
 						>
 							<Settings size={18} className="text-white" />
-						</Button>
+						</Button> */}
 					</div>
 
 					{/* Show the recorded audio (audio preview) */}

@@ -15,7 +15,6 @@ import { Input } from "@lemonsqueezy/wedges";
 import Image from "next/image";
 import axios from "axios";
 import { useRouter } from "next/navigation";
-import { getAuthToken, checkAuthStatus } from "@/utils/auth";
 import { toast } from "react-hot-toast";
 
 const Makeyourcommunity = () => {
@@ -29,15 +28,6 @@ const Makeyourcommunity = () => {
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [isNicheDropdownOpen, setIsNicheDropdownOpen] = useState(false);
 
-  // Run once the component is mounted on the client
-  useEffect(() => {
-    setMounted(true);
-    // Check auth status when component mounts
-    const authStatus = checkAuthStatus();
-    if (!authStatus.isAuthenticated) {
-      router.push("/login");
-    }
-  }, [router]);
 
   const collabTypes = [
     { value: "lifestyle", label: "Lifestyle" },
@@ -88,15 +78,6 @@ const Makeyourcommunity = () => {
     // Only run on the client after mounting
     if (!mounted) return;
 
-    const token = getAuthToken();
-    console.log("Creating community with auth status:", checkAuthStatus());
-
-    if (!token) {
-      setError("Authentication token not found. Please login again.");
-      router.push("/login");
-      return;
-    }
-
     if (!communityName.trim()) {
       setError("Community name is required");
       return;
@@ -118,7 +99,7 @@ const Makeyourcommunity = () => {
         },
         {
           headers: {
-            Authorization: `Bearer ${token}`,
+            // Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
         }

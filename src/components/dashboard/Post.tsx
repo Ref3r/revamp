@@ -13,9 +13,9 @@ import {
 } from "@/services/postService";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import { getAuthToken } from "@/utils/auth";
 import { useMutation } from "@tanstack/react-query";
 import apiClient from "@/utils/apiClient";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface PostProps {
   post: {
@@ -47,6 +47,8 @@ const Post = ({ post }: PostProps) => {
   const router = useRouter();
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [comments, setComments] = useState<any[]>(post.comments || []);
+
+  const { user } = useAuth();
 
   // Fetch current user ID on mount
   useEffect(() => {
