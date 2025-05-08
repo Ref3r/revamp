@@ -38,4 +38,5 @@ export interface AuthContextType {
   logout: () => void;
   forgotPassword: (payload: ForgotPasswordPayload) => Promise<AuthResponse>;
   resetPassword: (payload: ResetPasswordPayload) => Promise<AuthResponse>;
+  checkAuth: () => Promise<void>;
 }

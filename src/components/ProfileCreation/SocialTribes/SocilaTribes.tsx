@@ -1,4 +1,6 @@
+"use client"
 import { Button } from '@lemonsqueezy/wedges';
+
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { useDiscoverUsers } from '@/hooks/useDiscoverUsers';
@@ -7,7 +9,7 @@ import { useMutation } from '@tanstack/react-query';
 import SubmitButton from '../SubmitButton';
 import toast from 'react-hot-toast';
 import ProfileCreationLoader from '../loader/ProfileCreationLoader';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 interface CommunityListProps {
   onFollow: () => void;
 }

@@ -50,7 +50,6 @@ const Post = ({ post }: PostProps) => {
 
   const { user } = useAuth();
 
-  // Fetch current user ID on mount
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
@@ -97,21 +96,13 @@ const Post = ({ post }: PostProps) => {
 
   const { mutate: handleLikeToggle } = useMutation({
     mutationFn: async () => {
-      if (!currentUserId) {
-        toast.error("Please log in to like posts");
-        return;
-      }
-
       if (isLiked) {
-        // Unlike post
         await unlikePost(post._id);
       } else {
-        // Like post
         await likePost(post._id);
       }
     },
     onSuccess: () => {
-      // Update local state after successful mutation
       setIsLiked((prev) => !prev);
       setLikesCount((prev) => (isLiked ? prev - 1 : prev + 1));
     },
@@ -243,16 +234,18 @@ const Post = ({ post }: PostProps) => {
         <div className="flex justify-between items-center mb-3">
           <Button
             onClick={() => handleLikeToggle()}
+            before={
+              <Image
+                src={isLiked ? "/thumbs-up.svg" : "/thumbs-up.svg"}
+                width={22}
+                height={22}
+                alt="Like"
+              />
+            }
             className="flex items-center bg-transparent hover:bg-[#282828] rounded-lg px-3 py-2"
           >
-            <Image
-              src={isLiked ? "/thumbs-up.svg" : "/thumbs-up.svg"}
-              width={22}
-              height={22}
-              alt="Like"
-            />
             <span
-              className={`font-medium ml-2 ${
+              className={`font-medium ${
                 isLiked ? "text-green-500" : "text-white"
               }`}
             >
@@ -261,21 +254,16 @@ const Post = ({ post }: PostProps) => {
           </Button>
 
           <Button
+            before={<Image src="/comment-icon.svg" width={22} height={22} alt="Comment" />}
             onClick={() => setShowComments(!showComments)}
             className="flex items-center bg-transparent hover:bg-[#282828] rounded-lg px-3 py-2"
           >
-            <Image
-              src="/comment-icon.svg"
-              width={22}
-              height={22}
-              alt="Comment"
-            />
-            <span className="font-medium text-white ml-2">Comment</span>
+           
+            <span className="font-medium text-white">Comment</span>
           </Button>
 
-          <Button className="flex items-center bg-transparent hover:bg-[#282828] rounded-lg px-3 py-2">
-            <Image src="/share.svg" width={22} height={22} alt="Share" />
-            <span className="font-medium text-white ml-2">Share</span>
+          <Button before={<Image src="/share.svg" width={22} height={22} alt="Share" />} className="flex items-center bg-transparent hover:bg-[#282828] rounded-lg px-3 py-2">
+            <span className="font-medium text-white">Share</span>
           </Button>
         </div>
 

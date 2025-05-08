@@ -1,5 +1,4 @@
 import axios from "axios";
-import { getAuthToken } from "@/utils/auth";
 import { ServiceError } from "@/utils/errors";
 
 const apiClient = axios.create({
@@ -7,17 +6,12 @@ const apiClient = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-  withCredentials: false, // Important for CORS
+  withCredentials: true, // Enable sending cookies with cross-origin requests
 });
 
-// Request interceptor to add auth token
+// Request interceptor
 apiClient.interceptors.request.use(
   (config) => {
-    const token = getAuthToken();
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-
     config.headers["Content-Type"] = "application/json";
     config.headers["Access-Control-Allow-Origin"] = "*";
     return config;

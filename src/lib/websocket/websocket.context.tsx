@@ -2,12 +2,15 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { getAuthToken } from '@/utils/auth';
 
 interface WebSocketContextType {
   socket: Socket | null;
   sendMessage: (message: any) => void;
   isConnected: boolean;
+}
+
+interface WebSocketProviderProps {
+  children: ReactNode;
 }
 
 const WebSocketContext = createContext<WebSocketContextType>({
@@ -16,54 +19,40 @@ const WebSocketContext = createContext<WebSocketContextType>({
   isConnected: false,
 });
 
-export const useWebSocket = () => useContext(WebSocketContext);
-
-interface WebSocketProviderProps {
-  children: ReactNode;
-}
-
 export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    const token = getAuthToken();
-    if (!token) return;
-
     // Initialize socket connection
-    const newSocket = io(process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3001', {
-      auth: {
-        token: token
-      },
-      transports: ['websocket'],
-      reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
+    const socketInstance = io(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000', {
+      withCredentials: true, // Enable sending cookies with WebSocket handshake
     });
 
-    newSocket.on('connect', () => {
+    socketInstance.on('connect', () => {
       console.log('Socket connected');
       setIsConnected(true);
     });
 
-    newSocket.on('disconnect', () => {
+    socketInstance.on('disconnect', () => {
       console.log('Socket disconnected');
       setIsConnected(false);
     });
 
-    newSocket.on('error', (error) => {
-      console.error('Socket error:', error);
+    socketInstance.on('connect_error', (error) => {
+      console.error('Connection error:', error);
+      setIsConnected(false);
     });
 
-    setSocket(newSocket);
+    setSocket(socketInstance);
 
     return () => {
-      newSocket.close();
+      socketInstance.disconnect();
     };
   }, []);
 
   const sendMessage = (message: any) => {
-    if (socket && isConnected) {
+    if (socket) {
       socket.emit('message', message);
     }
   };
@@ -73,4 +62,6 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
       {children}
     </WebSocketContext.Provider>
   );
-}; 
+};
+
+export const useWebSocket = () => useContext(WebSocketContext); 

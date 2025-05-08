@@ -1,37 +1,23 @@
 // src/utils/auth.ts
-// Re-export authentication utility functions
+// Authentication utility functions for cookie-based authentication
 
-import {
-  getAuthToken as getToken,
-  setAuthToken as setToken,
-  removeAuthToken as removeToken,
-  isAuthenticated as checkAuth,
-} from "@/services/authService";
+import { isAuthenticated as checkAuth } from "@/services/authService";
 
 // Re-export with the same names
-export const getAuthToken = getToken;
-export const setAuthToken = setToken;
-export const removeAuthToken = removeToken;
 export const isAuthenticated = checkAuth;
 
 // Debug function to check authentication status
 export const checkAuthStatus = (): {
   isAuthenticated: boolean;
-  token?: string | null;
 } => {
-  const token = getAuthToken();
+  // With cookie-based auth, we can't reliably check if the user is authenticated
+  // from the client side without making a request to the server
   const status = {
-    isAuthenticated: !!token,
-    token: token,
+    isAuthenticated: false,
   };
 
   console.log("Auth Status:", status);
-
-  if (!status.isAuthenticated) {
-    console.warn("Not authenticated. Make sure you are logged in.");
-  } else {
-    console.log("Authentication token found.");
-  }
+  console.warn("With cookie-based auth, authentication status can only be determined by making a request to the server.");
 
   return status;
 };

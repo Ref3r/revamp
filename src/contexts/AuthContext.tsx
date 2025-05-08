@@ -9,9 +9,6 @@ import {
   useCallback,
 } from "react";
 import {
-  getAuthToken,
-  removeAuthToken,
-  setAuthToken,
   loginUser,
   registerUser,
   forgotPassword as forgotPasswordApi,
@@ -35,27 +32,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const checkAuth = useCallback(async () => {
     try {
-      const token = getAuthToken();
+      // With cookie-based auth, we just need to call the /users/me endpoint
+      // The cookie will be automatically sent with the request
+      const response = await apiClient.get("/users/me");
 
-      if (token) {
-        const response = await apiClient.get("/users/me");
+      if (response.status === 200) {
+        const user: User = response.data?.user;
 
-        if (response.status === 200) {
-          const user: User = response.data?.user;
-
-          if (!user.onboardingComplete) {
-            router.push("/onboarding");
-          }
-
-          setUser(user);
-        } else {
-          removeAuthToken();
-          setUser(null);
-          toast.error("Invalid authentication token");
+        if (!user.onboardingComplete) {
+          router.push("/onboarding");
         }
+
+        setUser(user);
+      } else {
+        setUser(null);
+        toast.error("Invalid authentication token");
       }
     } catch (error) {
-      removeAuthToken();
       setUser(null);
     } finally {
       setIsLoading(false);
@@ -70,8 +63,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const response = await loginUser(credentials);
 
-      if (response.success && response.token) {
-        setAuthToken(response.token);
+      if (response.success) {
+        await checkAuth(); // Fetch user data after successful login
       } else {
         console.warn("Login failed:", response.message);
       }
@@ -91,23 +84,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log("Attempting registration with:", credentials.email);
       const response = await registerUser(credentials);
 
-      // If registration is successful and we get a token, save it
-      if (response.success && response.token) {
-        console.log("Registration successful, token received");
-
-        // Store the token
-        setAuthToken(response.token);
-
-        // Verify token was stored correctly
-        const storedToken = getAuthToken();
-        if (storedToken) {
-          console.log("Token successfully stored in localStorage");
-        } else {
-          console.error("Failed to store token in localStorage");
-        }
-
-       await checkAuth();
-
+      if (response.success) {
+        console.log("Registration successful");
+        await checkAuth();
       } else {
         console.warn("Registration failed:", response.message);
       }
@@ -125,50 +104,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginWithToken = async (token: string): Promise<AuthResponse> => {
     try {
       console.log("Logging in with token");
-
-      // Store the token
-      setAuthToken(token);
-
-      // Verify token was stored correctly
-      const storedToken = getAuthToken();
-      if (!storedToken) {
-        console.error("Failed to store token in localStorage");
+      
+      // This function is typically used for OAuth callbacks
+      // With cookie-based auth, we don't need to store the token
+      // The server should set the cookie during the OAuth callback
+      
+      // Attempt to get user info with the cookie
+      await checkAuth();
+      
+      if (user) {
+        return {
+          success: true,
+          message: "Login successful",
+        };
+      } else {
         return {
           success: false,
-          message: "Failed to store authentication token",
-        };
-      }
-
-      // Attempt to get user info with the token
-      try {
-        const response = await apiClient.get("/users/me");
-
-        if (response.status === 200) {
-          const userData = response.data;
-          setUser(userData);
-
-          return {
-            success: true,
-            token,
-            message: "Login successful",
-          };
-        } else {
-          // If token is invalid, remove it
-          removeAuthToken();
-          setUser(null);
-
-          return {
-            success: false,
-            message: "Invalid authentication token",
-          };
-        }
-      } catch (apiError) {
-        console.error("API error when validating token:", apiError);
-
-        return {
-          success: true, // Consider it a success for now
-          token,
-          message: "Login partially successful, user data unavailable",
+          message: "Invalid authentication token",
         };
       }
     } catch (error) {
@@ -206,10 +158,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = () => {
-    removeAuthToken();
-    setUser(null);
-    router.push("/sign-up");
+  const logout = async () => {
+    try {
+      // Call the logout endpoint to clear the cookie
+      await apiClient.post("/auth/logout");
+      setUser(null);
+      router.push("/sign-up");
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Even if the API call fails, clear the user from state
+      setUser(null);
+      router.push("/sign-up");
+    }
   };
 
   const value = {
@@ -222,6 +182,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     logout,
     forgotPassword,
     resetPassword,
+    checkAuth,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
