@@ -23,7 +23,10 @@ import { useRouter } from "next/navigation";
 import apiClient from "@/utils/apiClient";
 import { AuthContextType, User } from "./types";
 import { toast } from "react-hot-toast";
+import { AxiosError } from "axios";
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const publicRoutes = ["/", "/login", "/sign-up", "/forgot-password"];
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -32,8 +35,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const checkAuth = useCallback(async () => {
     try {
-      // With cookie-based auth, we just need to call the /users/me endpoint
-      // The cookie will be automatically sent with the request
       const response = await apiClient.get("/users/me");
 
       if (response.status === 200) {
@@ -48,8 +49,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null);
         toast.error("Invalid authentication token");
       }
-    } catch (error) {
-      setUser(null);
+    } catch (error: any) {
+      const errorCode = error.statusCode;
+
+      if (
+        errorCode === 401 &&
+        !publicRoutes.includes(window.location.pathname)
+      ) {
+        setUser(null);
+        router.push("/login");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -104,14 +113,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginWithToken = async (token: string): Promise<AuthResponse> => {
     try {
       console.log("Logging in with token");
-      
+
       // This function is typically used for OAuth callbacks
       // With cookie-based auth, we don't need to store the token
       // The server should set the cookie during the OAuth callback
-      
+
       // Attempt to get user info with the cookie
       await checkAuth();
-      
+
       if (user) {
         return {
           success: true,

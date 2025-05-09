@@ -2,78 +2,34 @@
 
 "use client";
 import { useState, useEffect } from "react";
-import Sidebar from "@/components/dashboard/Sidebar";
-import ChatWindow from "@/components/chat-section/chat-window/ChatWindow";
-import Header from "@/components/communities/Header";
 import Leaderboard from "@/components/communities/leaderboard/leaderBoard";
-import axios from "axios";
 import { getAuthToken } from "@/utils/auth";
 import { toast } from "react-hot-toast";
 import {
-  getMessages,
-  sendMessage,
-  markMessagesAsRead,
-  Message as ApiMessage,
+    getMessages,
+    sendMessage,
+    markMessagesAsRead,
+    Message as ApiMessage,
 } from "@/services/messageService";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
-  getAllCommunities,
-  getJoinedCommunities,
+    Community, getJoinedCommunities
 } from "@/services/communityService";
-import FullPageLoader from "@/components/Loader/FullPageLoader";
+import ChatWindowWrapper, { Chat } from "./ChatWrapper";
 
-// Define types based on your existing code
-interface Message {
-  id: number;
-  content: string;
-  sender: "self" | "other";
-  timestamp: string;
-  imageUrl?: string;
-  fileUrl?: string;
-  fileName?: string;
-}
 
-interface Chat {
-  id: string;
-  name: string;
-  avatar: string;
-  lastSeen: string;
-  messages: Message[];
-  communityId: string;
-}
-
-const ChatWindowWrapper = ({
-  chat,
-  activeTab,
-  onBack,
-  onChatUpdate,
-  onSendMessage,
+export default function CommunityContent({
+  community,
+  isMobile,
+  showLeaderboard,
 }: {
-  chat: Chat;
-  activeTab: string;
-  onBack: () => void;
-  onChatUpdate: (updatedChat: Chat) => void;
-  onSendMessage: (chatId: string, content: string) => Promise<void>;
-}) => {
-  return (
-    <div className="flex-1 flex flex-col h-full overflow-hidden pb-16 md:pb-0">
-      <ChatWindow
-        chat={chat}
-        activeTab={activeTab}
-        onBack={onBack}
-        onChatUpdate={() => onChatUpdate(chat)}
-        onSendMessage={onSendMessage}
-      />
-    </div>
-  );
-};
-
-export default function CommunityApp() {
+  community: Community;
+  isMobile: boolean;
+  showLeaderboard: boolean;
+}) {
   const [selectedCategory, setSelectedCategory] = useState("Design");
   const [activeTab, setActiveTab] = useState("communities");
   const [currentChat, setCurrentChat] = useState<Chat | undefined>(undefined);
-  const [showLeaderboard, setShowLeaderboard] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
   const [isSmallScreen, setIsSmallScreen] = useState(false);
   const [showBottomNav, setShowBottomNav] = useState(true);
 
@@ -137,7 +93,7 @@ export default function CommunityApp() {
   ];
 
   // Create sample chat objects for each leaderboard user
-  const createChatForUser = (user: any): Chat => {
+  const createChastForUser = (user: any): Chat => {
     return {
       id: user.id.toString(),
       name: user.name,
@@ -378,86 +334,50 @@ export default function CommunityApp() {
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
-  if (isLoading || !joinedCommunities) {
-    return <FullPageLoader />;
-  }
-
+ 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#0E0E0E] text-white">
-      {/* Sidebar - Desktop only with margin */}
-      <div className="hidden md:block w-[70px] px-2 py-2">
-        <Sidebar />
-      </div>
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col h-screen">
-        {/* Header Section */}
-        <Header
-          selectedCategory={selectedCategory}
-          setSelectedCategory={setSelectedCategory}
-          isMobile={isSmallScreen}
-          joinedCommunities={joinedCommunities}
-        />
-
-        {/* Content Area */}
-        <div className="flex-1 flex overflow-hidden">
-          {/* Leaderboard Section */}
-          {(showLeaderboard || !isMobile) && (
-            <div className={`h-full ${isMobile ? "w-full" : "w-[400px]"} py-2`}>
-              <Leaderboard
-                selectedCategory={selectedCategory}
-                users={
-                  selectedCategory === "My Communities"
-                    ? joinedCommunities?.map((community: any) => ({
-                        id: community._id,
-                        name: community.name,
-                        rank: `${community.memberCount} members`,
-                        community: community.niche,
-                        avatar: community.image?.startsWith("http")
-                          ? "/community-1.svg"
-                          : community.image || "/community-1.svg",
-                        hasUnread: false,
-                        medal: "/medal.svg",
-                      }))
-                    : leaderboardUsers
-                }
-                onChatSelect={handleChatSelect}
-                isMobile={isSmallScreen}
-                // isLoading={isLoading && selectedCategory === "My Communities"}
-              />
-            </div>
-          )}
-
-          {/* Chat Section - Absolute position so it doesn't push content */}
-          {currentChat && (isMobile ? !showLeaderboard : true) && (
-            <div
-              className={`${
-                isMobile ? "absolute inset-0 pt-[72px] z-10" : "flex-1"
-              } h-full overflow-hidden`}
-            >
-              {/* Use our custom wrapper for better mobile layout */}
-              <ChatWindowWrapper
-                chat={currentChat}
-                activeTab={activeTab}
-                onBack={handleBack}
-                onChatUpdate={handleChatUpdate}
-                onSendMessage={async (chatId, content) => {
-                  await handleSendMessage({ communityId: chatId, content });
-                }}
-              />
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Mobile Bottom Navigation - Only show when not in chat on mobile */}
-      {showBottomNav && (
-        <div className="fixed bottom-0 left-0 right-0 z-30 md:hidden bg-[#1A1919] py-2 px-2 mx-2 mb-2 rounded-xl">
-          <div className="flex justify-around items-center">
-            <Sidebar isMobile={true} />
-          </div>
+    <div className="flex-1 flex overflow-hidden">
+      {(showLeaderboard || !isMobile) && (
+        <div className={`h-full ${isMobile ? "w-full" : "w-[400px]"} py-2`}>
+          <Leaderboard
+            selectedCategory={selectedCategory}
+            users={
+              selectedCategory === "My Communities"
+                ? joinedCommunities?.map((community: any) => ({
+                    id: community._id,
+                    name: community.name,
+                    rank: `${community.memberCount} members`,
+                    community: community.niche,
+                    avatar: community.image?.startsWith("http")
+                      ? "/community-1.svg"
+                      : community.image || "/community-1.svg",
+                    hasUnread: false,
+                    medal: "/medal.svg",
+                  }))
+                : leaderboardUsers
+            }
+            onChatSelect={handleChatSelect}
+            isMobile={isSmallScreen}
+            // isLoading={isLoading && selectedCategory === "My Communities"}
+          />
         </div>
       )}
+
+      <div
+        className={`${
+          isMobile ? "absolute inset-0 pt-[72px] z-10" : "flex-1"
+        } h-full overflow-hidden`}
+      >
+        <ChatWindowWrapper
+          chat={currentChat}
+          activeTab={activeTab}
+          onBack={handleBack}
+          onChatUpdate={handleChatUpdate}
+          onSendMessage={async (chatId, content) => {
+            await handleSendMessage({ communityId: chatId, content });
+          }}
+        />
+      </div>
     </div>
   );
 }

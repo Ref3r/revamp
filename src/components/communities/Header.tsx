@@ -1,59 +1,37 @@
 "use client";
 import { Button } from "@lemonsqueezy/wedges";
-import { Menu, Plus, X, Users } from "lucide-react";
+import { Menu, X, Users } from "lucide-react";
 import React, { useState } from "react";
-import MainCommunityComponent from "../MainCommunityComponent/MainCommunityComponent";
-import axios from "axios";
-import { getAuthToken } from "@/utils/auth";
-import { toast } from "react-hot-toast";
-
-interface JoinedCommunity {
-  _id: string;
-  name: string;
-  description: string;
-  image: string;
-  niche: string;
-  memberCount: number;
-}
-
+import MainCommunityComponent from "./MainCommunityComponent/MainCommunityComponent";
+import { useQuery } from "@tanstack/react-query";
+import { Community, getJoinedCommunities } from "@/services/communityService";
 // Header Component with responsive design and hamburger menu
 const Header = ({
   selectedCategory,
   setSelectedCategory,
   isMobile,
-  onFetchJoinedCommunities,
-  isLoading,
+  joinedCommunities
 }: {
+  joinedCommunities: Community[];
   selectedCategory: string;
   setSelectedCategory: (category: string) => void;
   isMobile: boolean;
-  onFetchJoinedCommunities: () => void;
-  isLoading: boolean;
 }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [showCommunity, setShowCommunity] = useState(false);
 
-  // Toggle menu for mobile
   const toggleMenu = () => setMenuOpen(!menuOpen);
 
-  // Handle New Community button click
   const handleNewCommunityClick = () => setShowCommunity(true);
 
-  // Handle selecting a category
   const selectCategory = (category: string) => {
     setSelectedCategory(category);
     if (isMobile) setMenuOpen(false); // Close the menu on mobile after selecting a category
   };
 
-  const categories = [
-    "Design",
-    "Code",
-    "Twitter",
-    "Playground",
-    "Portfolio Mentors",
-    "Tech Leaders",
-    "Refer Folks",
-  ];
+
+  console.log(joinedCommunities, "joinedCommunities");  
+
 
   return (
     <div className="sticky top-0 z-30 bg-[#0E0E0E] py-3 sm:py-5 px-4 sm:px-6">
@@ -74,15 +52,6 @@ const Header = ({
         </div>
 
         <div className="flex gap-2">
-          <Button
-            className="bg-[#1A1919] hover:bg-[#2D2D2D] text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-md text-xs sm:text-sm flex items-center gap-2"
-            onClick={onFetchJoinedCommunities}
-            disabled={isLoading}
-          >
-            <Users size={16} />
-            {isMobile ? "" : "My Communities"}
-          </Button>
-
           <Button
             className="bg-gradient-to-r from-[#0BA360] to-[#27A980] hover:from-[#27A980] hover:to-[#0BA360] text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-md text-xs sm:text-sm flex items-center"
             onClick={handleNewCommunityClick}
@@ -109,17 +78,17 @@ const Header = ({
       {/* Mobile Menu - Overlay content with absolute positioning */}
       {isMobile && menuOpen && (
         <div className="absolute top-full left-0 right-0 mt-1 px-4 py-2 bg-[#1A1919] rounded-lg shadow-lg z-40">
-          {categories.map((category) => (
+          {joinedCommunities.map((category) => (
             <button
-              key={category}
+              key={category._id}
               className={`block w-full text-left px-4 py-2 text-sm ${
-                selectedCategory === category
+                selectedCategory === category._id
                   ? "bg-[#2D2D2D] text-white font-medium"
                   : "text-gray-400 hover:bg-[#222222]"
               }`}
-              onClick={() => selectCategory(category)}
+              onClick={() => selectCategory(category._id)}
             >
-              {category}
+              {category.name}
             </button>
           ))}
         </div>
@@ -138,24 +107,19 @@ const Header = ({
       {!isMobile && (
         <div className="mt-4 overflow-x-auto pb-2">
           <div className="flex space-x-2 min-w-max">
-            {[
-              ...categories,
-              selectedCategory === "My Communities" ? "My Communities" : null,
-            ]
-              .filter(Boolean)
-              .map((category) => (
-                <button
-                  key={category}
-                  className={`px-4 py-1.5 rounded-full text-sm ${
-                    selectedCategory === category
-                      ? "bg-[#2D2D2D] text-white font-medium"
-                      : "bg-[#191919] text-[#FFFFFF80] hover:bg-[#222222] border border-[#FFFFFF66]"
-                  }`}
-                  onClick={() => setSelectedCategory(category || "")}
-                >
-                  {category}
-                </button>
-              ))}
+            {joinedCommunities.map((category) => (
+              <button
+                key={category._id}
+                className={`px-4 py-1.5 rounded-full text-sm ${
+                  selectedCategory === category._id
+                    ? "bg-[#2D2D2D] text-white font-medium"
+                    : "bg-[#191919] text-[#FFFFFF80] hover:bg-[#222222] border border-[#FFFFFF66]"
+                }`}
+                onClick={() => setSelectedCategory(category._id || "")}
+              >
+                {category.name}
+              </button>
+            ))}
           </div>
         </div>
       )}

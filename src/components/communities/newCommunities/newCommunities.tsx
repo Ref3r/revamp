@@ -1,96 +1,36 @@
 "use client";
-import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { Button } from "@lemonsqueezy/wedges";
-import axios from "axios";
-import { getAuthToken } from "@/utils/auth";
 import { toast } from "react-hot-toast";
-
-interface Community {
-  _id: string;
-  name: string;
-  description: string;
-  image: string;
-  niche: string;
-  creator: {
-    _id: string;
-    email: string;
-    profilePicture: string;
-    name?: string;
-  };
-  members: string[];
-  admins: string[];
-  visibility: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import { getAllCommunities, joinCommunity } from "@/services/communityService";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { handleImageUrl } from "@/utils/placeholder";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Newcommunities = () => {
-  const [communities, setCommunities] = useState<Community[]>([]);
-  const [joiningCommunity, setJoiningCommunity] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
 
-  // Fetch suggested communities
-  const fetchSuggestedCommunities = async () => {
-    try {
-      const token = getAuthToken();
-      if (!token) return;
+  const {
+    data: allCommunities,
+    isLoading: isLoadingAllCommunities,
+    refetch: refetchAllCommunities,
+  } = useQuery({
+    queryKey: ["all-communities"],
+    queryFn: async () => getAllCommunities(),
+  });
 
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/communities`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+  const joinCommunityMutation = useMutation({
+    mutationFn: async (communityId: string) => joinCommunity(communityId),
+  });
 
-      if (response.data.success) {
-        setCommunities(response.data.data);
-      }
-    } catch (error) {
-      console.error("Error fetching suggested communities:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const joiningCommunity = joinCommunityMutation.isPending
+    ? joinCommunityMutation.variables
+    : null;
 
-  // Handle joining a community
-  const handleJoinCommunity = async (communityId: string) => {
-    try {
-      setJoiningCommunity(communityId);
-      const token = getAuthToken();
-      if (!token) {
-        toast.error("Please log in to join communities");
-        return;
-      }
+  const notJoinedCommunities = allCommunities?.data?.filter(
+    (community) => !community?.members.includes(user?._id || "")
+  );
 
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/communities/${communityId}/join`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (response.data.success) {
-        toast.success("Successfully joined the community!");
-        // Refresh the communities list
-        fetchSuggestedCommunities();
-      }
-    } catch (error) {
-      console.error("Error joining community:", error);
-      toast.error("Failed to join community");
-    } finally {
-      setJoiningCommunity(null);
-    }
-  };
-
-  useEffect(() => {
-    fetchSuggestedCommunities();
-  }, []);
 
   return (
     <div className="w-full p-6 rounded-lg">
@@ -99,16 +39,16 @@ const Newcommunities = () => {
       </h2>
 
       <div className="space-y-4">
-        {isLoading ? (
+        {isLoadingAllCommunities ? (
           <div className="flex justify-center items-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-green-500"></div>
           </div>
-        ) : communities.length === 0 ? (
+        ) : allCommunities?.data?.length === 0 ? (
           <div className="text-center py-8 text-gray-400">
             No communities available
           </div>
         ) : (
-          communities.map((community) => (
+          notJoinedCommunities?.map((community) => (
             <div
               key={community._id}
               className="flex items-center justify-between gap-4 bg-[#0E0E0E] p-4 rounded-lg"
@@ -118,7 +58,7 @@ const Newcommunities = () => {
                   <Image
                     height={48}
                     width={48}
-                    src={community.image || "/default-community.svg"}
+                    src={handleImageUrl(community.image, community.name)}
                     alt={community.name}
                     className="rounded-full"
                   />
@@ -141,7 +81,14 @@ const Newcommunities = () => {
                 </div>
               </div>
               <Button
-                onClick={() => handleJoinCommunity(community._id)}
+                onClick={() =>
+                  joinCommunityMutation.mutate(community._id, {
+                    onSuccess: () => {
+                      toast.success("Successfully joined the community!");
+                      refetchAllCommunities();
+                    },
+                  })
+                }
                 disabled={joiningCommunity === community._id}
                 className={`bg-white hover:bg-white/90 transition-colors rounded-md shrink-0 ${
                   joiningCommunity === community._id ? "opacity-50" : ""
