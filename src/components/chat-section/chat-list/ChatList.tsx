@@ -2,20 +2,15 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { Chat } from "@/app/chat/page";
 
-interface Chat {
-  id: number;
-  name: string;
-  avatar: string;
-  lastMessage: string;
-  lastSeen: string;
-}
+
 
 interface ChatListProps {
   chats: Chat[];
   activeTab: string;
-  selectedChat: number | null;
-  onSelectChat: (id: number) => void;
+  selectedChat: string | null;
+  onSelectChat: (id: string) => void;
   setActiveTab: (tab: string) => void;
 }
 

@@ -65,7 +65,6 @@ const ProfileBox = ({
     );
   }
 
-  console.log(userData, "userData?.profilePicture");
 
   return (
     <div className="w-full">

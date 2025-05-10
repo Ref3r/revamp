@@ -46,38 +46,12 @@ interface PostProps {
 
 const Post = ({ post }: PostProps) => {
   const router = useRouter();
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [comments, setComments] = useState<any[]>(post.comments || []);
 
   const { user } = useAuth();
 
-  useEffect(() => {
-    const fetchCurrentUser = async () => {
-      try {
-        // const token = getAuthToken();
-        // if (!token) return;
+  const currentUserId = user?._id;
 
-        // const API_URL = process.env.NEXT_PUBLIC_API_URL;
-        // if (!API_URL) return;
-
-        // const response = await fetch(`${API_URL}/api/v1/users/me`, {
-        //   headers: {
-        //     Authorization: `Bearer ${token}`,
-        //   },
-        // });
-        const response = await apiClient.get("/users/me");
-
-        if (response.status % 100 !== 2) {
-          const data = await response.data;
-          setCurrentUserId(data.user._id);
-        }
-      } catch (error) {
-        console.error("Error fetching current user:", error);
-      }
-    };
-
-    fetchCurrentUser();
-  }, []);
 
   const [isLiked, setIsLiked] = useState(
     post.likes?.includes(currentUserId || "") || false
@@ -154,6 +128,20 @@ const Post = ({ post }: PostProps) => {
     router.push(`/posts/${post._id}`);
   };
 
+  // Navigate to chat with the post author
+  const handleStartChat = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent the post click handler from firing
+    
+    // If the current user is the author, don't do anything
+    if (currentUserId === post.author._id) {
+      toast.error("You cannot chat with yourself");
+      return;
+    }
+    
+    // Navigate to chat page and pass the recipient's ID in the URL
+    router.push(`/chat?recipientId=${post.author._id}`);
+  };
+
   return (
     <div className="w-full">
       <div className="bg-[#1A1919] rounded-[20px] p-4">
@@ -165,21 +153,44 @@ const Post = ({ post }: PostProps) => {
             alt="User profile"
             className="rounded-full"
           />
-          <div className="ml-4">
-            <h1 className="font-medium text-lg text-white">
-              {post.author?.name}
-            </h1>
-            {post.location && (
-              <div className="text-sm text-gray-400 flex items-center">
+          <div className="ml-4 flex items-center">
+            <div>
+              <h1 className="font-medium text-lg text-white">
+                {post.author?.name}
+              </h1>
+              {post.location && (
+                <div className="text-sm text-gray-400 flex items-center">
+                  <Image
+                    src="/location.svg"
+                    width={12}
+                    height={12}
+                    alt="Location"
+                    className="mr-1"
+                  />
+                  <span>{post.location.name}</span>
+                </div>
+              )}
+            </div>
+            
+            {/* Message button to start a chat - only show if not the current user */}
+            {currentUserId !== post.author._id && (
+              <Button
+                onClick={handleStartChat}
+                className="ml-auto flex items-center bg-transparent hover:bg-[#282828] rounded-lg px-3 py-2"
+              >
                 <Image
-                  src="/location.svg"
-                  width={12}
-                  height={12}
-                  alt="Location"
-                  className="mr-1"
+                  src="/message-icon.svg"
+                  width={18}
+                  height={18}
+                  alt="Message"
+                  className="mr-2"
+                  onError={(e) => {
+                    // Fallback to a text button if the icon doesn't load
+                    e.currentTarget.style.display = 'none';
+                  }}
                 />
-                <span>{post.location.name}</span>
-              </div>
+                <span className="text-sm text-white">Message</span>
+              </Button>
             )}
           </div>
         </div>

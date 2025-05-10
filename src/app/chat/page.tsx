@@ -1,262 +1,245 @@
 "use client";
 
-import { useState, useEffect, SetStateAction } from "react";
+import { useState, useEffect, useCallback } from "react";
 import ChatList from "@/components/chat-section/chat-list/ChatList";
 import ChatWindow from "@/components/chat-section/chat-window/ChatWindow";
 import Sidebar from "@/components/dashboard/Sidebar";
+import { useRouter, useSearchParams } from "next/navigation";
+import { toast } from "react-hot-toast";
+import { ChatEventType, RoomType, SocketMessage } from "@/types/socket";
+import { DirectChatResponse } from "@/types/chat.type";
+import { useAuth } from "@/contexts/AuthContext";
+import { useWebSocket } from "@/lib/websocket/websocket.context";
+import { getDirectChats } from "@/services/chatService";
+import { handleImageUrl } from "@/utils/placeholder";
+import Link from "next/link";
+import { Chat, ChatMessage, User, useResponsiveLayout , useChatManagement} from "./hooks";
 
-const initialChats = [
-  {
-    id: 1,
-    name: "Christopher Campbell",
-    avatar: "/profile.svg",
-    lastMessage: "In front of the Bar, about whic...",
-    lastSeen: "3h ago",
-    messages: [
-      {
-        id: 1,
-        content: "Hey, How are you?",
-        sender: "other",
-        timestamp: "12:00",
-      },
-      {
-        id: 2,
-        content: "I am fine, How about you?",
-        sender: "self",
-        timestamp: "12:01",
-      },
-      {
-        id: 3,
-        content: "Yayy, Great I would love to join the party!",
-        sender: "self",
-        timestamp: "12:02",
-      },
-      {
-        id: 4,
-        content: "Great! Let's meet in the party!",
-        sender: "other",
-        timestamp: "12:03",
-      },
-    ],
-  },
 
-  {
-    id: 2,
-    name: "Houcine Ncib",
-    avatar: "/profile2.svg",
-    lastMessage: "What do you have planned thi...",
-    lastSeen: "5h ago",
-    messages: [
-      {
-        id: 1,
-        content: "Hello! How's your day going?",
-        sender: "other",
-        timestamp: "11:30",
-      },
-      {
-        id: 2,
-        content: "Pretty good, thanks! Working on some new designs.",
-        sender: "self",
-        timestamp: "11:32",
-      },
-    ],
-  },
-  {
-    id: 3,
-    name: "Kelly Sikkema",
-    avatar: "/profile3.svg",
-    lastMessage: "How would you describe yours...",
-    lastSeen: "1d ago",
-    messages: [
-      {
-        id: 1,
-        content: "Did you see the latest updates?",
-        sender: "other",
-        timestamp: "09:15",
-      },
-    ],
-  },
-  {
-    id: 6,
-    name: "Ethan Hoover",
-    avatar: "/profile.svg",
-    lastMessage: "How do you relieve stress?",
-    lastSeen: "2d ago",
-    messages: [
-      {
-        id: 1,
-        content: "How do you handle stress during busy periods?",
-        sender: "other",
-        timestamp: "15:45",
-      },
-    ],
-  },
-  {
-    id: 7,
-    name: "Joseph Pearson",
-    avatar: "/profile2.svg",
-    lastMessage: "What's your sign?",
-    lastSeen: "3d ago",
-    messages: [
-      {
-        id: 1,
-        content: "Just curious, what's your zodiac sign?",
-        sender: "other",
-        timestamp: "18:22",
-      },
-    ],
-  },
-];
+// Custom hook for WebSocket event handling
+const useWebSocketEvents = (
+  user: User | null,
+  setChats: React.Dispatch<React.SetStateAction<Chat[]>>
+) => {
+  const { socket, isConnected, joinChatRoom, leaveChatRoom } = useWebSocket();
+  
+  // Reference to joined chat rooms for cleanup
+  const joinedRooms = new Set<string>();
 
-const initialCollaborationChats = [
-  {
-    id: 4,
-    name: "Design Team",
-    avatar: "/profile.svg",
-    lastMessage: "New project requirements...",
-    lastSeen: "2h ago",
-    messages: [
-      {
-        id: 1,
-        content: "Hey team, I've updated the design specs",
-        sender: "other",
-        timestamp: "14:30",
-      },
-      {
-        id: 2,
-        content: "Great! I'll review them now",
-        sender: "self",
-        timestamp: "14:35",
-      },
-    ],
-  },
-  {
-    id: 5,
-    name: "Marketing Project",
-    avatar: "/profile2.svg",
-    lastMessage: "Campaign updates for Q2...",
-    lastSeen: "1h ago",
-    messages: [
-      {
-        id: 1,
-        content: "The Q2 campaign looks promising!",
-        sender: "other",
-        timestamp: "15:00",
-      },
-    ],
-  },
-];
-
-export default function Home() {
-  const [activeTab, setActiveTab] = useState("general");
-  const [selectedChat, setSelectedChat] = useState(null);
-  const [isMobileView, setIsMobileView] = useState(false);
-  const [chats, setChats] = useState(initialChats);
-  const [collaborationChats, setCollaborationChats] = useState(
-    initialCollaborationChats
-  );
-
-  // Update lastMessage when messages change
-  const updateLastMessage = (updatedChat: {
-    id: number;
-    name: string;
-    avatar: string;
-    lastMessage: string;
-    lastSeen: string;
-    messages: {
-      fileUrl: boolean;
-      imageUrl: boolean;
-      fileName: any;
-      id: number;
-      content: string;
-      sender: string;
-      timestamp: string;
-    }[];
-  }) => {
-    if (!updatedChat.messages || updatedChat.messages.length === 0)
-      return updatedChat;
-
-    const lastMessage = updatedChat.messages[updatedChat.messages.length - 1];
-    let lastMessageText = lastMessage.content;
-
-    // If it's an image or file message without text, use a descriptive message
-    if (lastMessage.imageUrl && !lastMessage.content) {
-      lastMessageText = "Sent an image";
-    } else if (lastMessage.fileUrl && !lastMessage.content) {
-      lastMessageText = `Sent a file: ${lastMessage.fileName}`;
-    }
-
-    // Truncate the message if it's too long
-    if (lastMessageText.length > 30) {
-      lastMessageText = lastMessageText.substring(0, 30) + "...";
-    }
-
-    return {
-      ...updatedChat,
-      lastMessage: lastMessageText,
-      lastSeen:
-        lastMessage.sender === "other" ? "Just now" : updatedChat.lastSeen,
-    };
-  };
-
-  // Handle message updates from ChatWindow
-  const handleChatUpdate = (updatedChat: {
-    id: number;
-    name: string;
-    avatar: string;
-    lastMessage: string;
-    lastSeen: string;
-    messages: {
-      id: number;
-      content: string;
-      sender: string;
-      timestamp: string;
-    }[];
-  }) => {
-    // @ts-ignore
-    const formattedChat = updateLastMessage(updatedChat);
-
-    if (activeTab === "general") {
-      // Update the chat in the general chats array
-      setChats(
-        chats.map((chat) =>
-          chat.id === formattedChat.id ? formattedChat : chat
-        )
-      );
-    } else {
-      // Update the chat in the collaboration chats array
-      setCollaborationChats(
-        collaborationChats.map((chat) =>
-          chat.id === formattedChat.id ? formattedChat : chat
-        )
-      );
-    }
-  };
-
-  // Handle screen resize
+  // Handle receiving messages via WebSocket
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobileView(window.innerWidth < 768);
+    if (!socket || !isConnected || !user) return;
+
+    const handleReceiveMessage = (message: SocketMessage & { recipientId?: string }) => {
+      console.log("WebSocket message received:", {
+        messageId: message.messageId,
+        content: message.content,
+        senderId: message.senderId,
+        myId: user._id,
+        isMine: message.senderId === user._id,
+        recipientId: message.recipientId
+      });
+
+      if (message.roomType === RoomType.DIRECT) {
+        // Get the ID of the other user in the conversation
+        const chatId = message.senderId === user._id ? message.recipientId : message.senderId;
+        
+        // Skip if we can't determine the chat ID
+        if (!chatId) {
+          console.log("Skipping message - couldn't determine chat ID");
+          return;
+        }
+        
+        // Check if this is our own message - if so, don't duplicate it
+        const isSelfMessage = message.senderId === user._id;
+        console.log("Message is from self:", isSelfMessage);
+        
+        // If this is a self message and we already have it in localStorage, skip
+        if (isSelfMessage) {
+          const messageSendKey = `sent_${message.messageId}`;
+          const alreadyProcessed = localStorage.getItem(messageSendKey);
+          console.log("Message already processed:", alreadyProcessed);
+          
+          if (alreadyProcessed) {
+            console.log("Skipping duplicate self message");
+            return; // Skip this message since we already added it locally
+          }
+        }
+        
+        setChats(prevChats => {
+          // Find existing chat or create new one
+          const chatIndex = prevChats.findIndex(chat => chat.id.toString() === chatId);
+          
+          if (chatIndex >= 0) {
+            // Update existing chat
+            const updatedChats = [...prevChats];
+            const chat = { ...updatedChats[chatIndex] };
+            
+            // Add new message with correct sender
+            const newMessage: ChatMessage = {
+              id: message.messageId || Date.now().toString(),
+              content: message.content,
+              sender: isSelfMessage ? "self" : "other",
+              timestamp: new Date(message.timestamp || Date.now()).toLocaleTimeString(),
+              imageUrl: message.metadata?.type === 'image',
+              fileUrl: message.metadata?.type === 'file',
+              fileName: message.metadata?.fileName
+            };
+            
+            // Check if we already have this message (prevent duplicates)
+            const isDuplicate = chat.messages.some(msg => msg.id === newMessage.id);
+            if (!isDuplicate) {
+              chat.messages = [...chat.messages, newMessage];
+              chat.lastMessage = message.content;
+              chat.lastSeen = "Just now";
+              
+              // Move to top of list
+              updatedChats.splice(chatIndex, 1);
+              updatedChats.unshift(chat);
+            }
+            
+            return isDuplicate ? prevChats : updatedChats;
+          } else {
+            // Create new chat
+            const newChat: Chat = {
+              id: chatId,
+              name: message.senderName || "New User",
+              avatar: message.senderPicture || "/profile.svg",
+              lastMessage: message.content,
+              lastSeen: "Just now",
+              messages: [{
+                id: message.messageId || Date.now().toString(),
+                content: message.content,
+                sender: isSelfMessage ? "self" : "other",
+                timestamp: new Date(message.timestamp || Date.now()).toLocaleTimeString(),
+                imageUrl: message.metadata?.type === 'image',
+                fileUrl: message.metadata?.type === 'file',
+                fileName: message.metadata?.fileName
+              }]
+            };
+            
+            return [newChat, ...prevChats];
+          }
+        });
+      }
+    };
+    
+    // Handle typing indicators
+    const handleTypingIndicator = (data: any) => {
+      if (data.roomType === RoomType.DIRECT) {
+        // Extract the other user ID from the room ID
+        const userIds = data.roomId.split('-');
+        const otherUserId = userIds[0] === user._id ? userIds[1] : userIds[0];
+        
+        setChats(prevChats => 
+          prevChats.map(chat => 
+            chat.id.toString() === otherUserId 
+              ? { ...chat, isTyping: data.isTyping }
+              : chat
+          )
+        );
+      }
+    };
+    
+    // Register event listeners
+    socket.on(ChatEventType.RECEIVE_MESSAGE, handleReceiveMessage);
+    socket.on(ChatEventType.TYPING, handleTypingIndicator);
+    socket.on(ChatEventType.STOP_TYPING, handleTypingIndicator);
+    
+    // Cleanup on unmount
+    return () => {
+      socket.off(ChatEventType.RECEIVE_MESSAGE, handleReceiveMessage);
+      socket.off(ChatEventType.TYPING, handleTypingIndicator);
+      socket.off(ChatEventType.STOP_TYPING, handleTypingIndicator);
+    };
+  }, [socket, isConnected, user, setChats]);
+
+  // Join/leave chat rooms when selected chat changes
+  const handleChatRoomConnection = useCallback((selectedChat: string | null) => {
+    if (!socket || !isConnected || !user) return;
+
+    // Clean up previously joined rooms
+    const cleanup = () => {
+      joinedRooms.forEach(roomId => {
+        leaveChatRoom(roomId, RoomType.DIRECT);
+      });
+      joinedRooms.clear();
     };
 
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+    // If new chat is selected, join the room
+    if (selectedChat) {
+      const roomId = [user._id, selectedChat].sort().join('-');
+      joinChatRoom(roomId, RoomType.DIRECT);
+      joinedRooms.add(roomId);
+    }
 
-  const displayChats =
-    activeTab === "collaborations" ? collaborationChats : chats;
-  const currentChat = displayChats.find((chat) => chat.id === selectedChat);
+    // Return cleanup function
+    return cleanup;
+  }, [socket, isConnected, user, joinChatRoom, leaveChatRoom, joinedRooms]);
 
-  const handleSelectChat = (id: SetStateAction<null>) => {
-    setSelectedChat(id);
-  };
+  return { handleChatRoomConnection };
+};
 
-  const handleBack = () => {
-    setSelectedChat(null);
-  };
+export default function ChatPage() {
+  const { isMobileView } = useResponsiveLayout();
+  const {
+    activeTab,
+    setActiveTab,
+    selectedChat,
+    isLoading,
+    authError,
+    user,
+    loadChats,
+    handleChatUpdate,
+    handleSelectChat,
+    handleBack,
+    getDisplayChats,
+    getCurrentChat,
+    setChats,
+  } = useChatManagement();
+  
+  const { handleChatRoomConnection } = useWebSocketEvents(user, setChats);
 
+  // Load chats on mount
+  useEffect(() => {
+    if (user) {
+      loadChats();
+    }
+  }, [user, loadChats]);
+
+  // Handle chat room connections
+  useEffect(() => {
+    if (selectedChat && user) {
+      const cleanup = handleChatRoomConnection(selectedChat);
+      return cleanup;
+    }
+  }, [selectedChat, user, handleChatRoomConnection]);
+
+  // Get current display data
+  const displayChats = getDisplayChats();
+  const currentChat = getCurrentChat();
   const shouldShowMobileNav = !selectedChat || !isMobileView;
+
+  // Show auth error or loading state
+  if (authError) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-[#0E0E0E] text-white">
+        <div className="text-center p-6 bg-neutral-900 rounded-lg">
+          <h2 className="text-xl mb-4">Authentication Required</h2>
+          <p className="mb-4">Please login to access your chats</p>
+          <Link href="/auth/signin" className="px-4 py-2 bg-blue-600 rounded">Login</Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-[#0E0E0E] text-white">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-[#0E0E0E] text-white overflow-hidden">
@@ -283,9 +266,7 @@ export default function Home() {
           md:block w-full md:w-80 lg:w-96 flex-shrink-0
           transition-all duration-300 ease-in-out
           border-r border-[#28282800] overflow-y-auto
-          ${
-            shouldShowMobileNav ? "pb-16" : ""
-          } /* Add padding when mobile nav is visible */
+          ${shouldShowMobileNav ? "pb-16" : ""}
         `}
         >
           <div className="h-full flex flex-col">
@@ -295,9 +276,8 @@ export default function Home() {
                 chats={displayChats}
                 activeTab={activeTab}
                 selectedChat={selectedChat}
-                // @ts-ignore
                 onSelectChat={handleSelectChat}
-                setActiveTab={setActiveTab}
+                setActiveTab={setActiveTab as (tab: string) => void}
               />
             </div>
           </div>
@@ -314,11 +294,9 @@ export default function Home() {
         >
           <div className="h-full flex flex-col">
             <ChatWindow
-              // @ts-ignore
               chat={currentChat}
               activeTab={activeTab}
               onBack={handleBack}
-              // @ts-ignore
               onChatUpdate={handleChatUpdate}
             />
           </div>

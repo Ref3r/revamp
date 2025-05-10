@@ -33,10 +33,10 @@ export default function RootLayout({
       >
         <QueryProvider>
           <AuthProvider>
-            {/* <WebSocketProvider> */}
+            <WebSocketProvider>
               {children}
               <CustomToaster />
-            {/* </WebSocketProvider> */}
+            </WebSocketProvider>
           </AuthProvider>
         </QueryProvider>
       </body>

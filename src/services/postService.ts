@@ -1,10 +1,5 @@
-import { getAuthToken } from "@/utils/auth";
-import axios from "axios";
 import { ServiceError } from "@/utils/errors";
 import apiClient from "@/utils/apiClient";
-
-// Use the Next.js app URL for API calls
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
 interface LocationData {
   name: string;

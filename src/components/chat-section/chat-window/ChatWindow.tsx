@@ -17,27 +17,7 @@ import {
 import { Button, Input } from "@lemonsqueezy/wedges";
 import CollaborationForm, { CollaborationFormData } from "../collab-request-form/CollaborationForm ";
 import Form from "@/components/communities/community-challenge-form/Form";
-
-interface Message {
-  id: number;
-  content: string;
-  sender: "self" | "other";
-  timestamp: string;
-  imageUrl?: string;
-  fileUrl?: string;
-  fileName?: string;
-  isCollabRequest?: boolean;
-  collabData?: CollaborationFormData;
-  collabAccepted?: boolean;
-}
-
-interface Chat {
-  id: number;
-  name: string;
-  avatar: string;
-  lastSeen: string;
-  messages: Message[];
-}
+import { Chat, ChatMessage } from '@/app/chat/page';
 
 interface ChatWindowProps {
   chat: Chat | undefined;
@@ -108,11 +88,8 @@ export default function ChatWindow({
       minute: "2-digit",
     });
 
-    const userMessage: Message = {
-      id:
-        (chat.messages.length > 0
-          ? Math.max(...chat.messages.map((m) => m.id))
-          : 0) + 1,
+    const userMessage: ChatMessage = {
+      id: `${chat.id}-${chat.messages.length + 1}`,
       content: newMessage,
       sender: "self",
       timestamp: timeString,
@@ -120,7 +97,7 @@ export default function ChatWindow({
 
     if (selectedImage) {
       const imageUrl = URL.createObjectURL(selectedImage);
-      userMessage.imageUrl = imageUrl;
+      userMessage.imageUrl = true;
       if (!newMessage.trim()) {
         userMessage.content = "";
       }
@@ -157,35 +134,6 @@ export default function ChatWindow({
     setSelectedImage(null);
     setSelectedFile(null);
 
-    // Simulate a response (optional, for demo)
-    setTimeout(() => {
-      const responseContent = generateHardcodedResponse(userMessage.content);
-      const responseTime = new Date();
-      const responseTimeString = responseTime.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-
-      const responseMessage: Message = {
-        id:
-          (updatedMessages.length > 0
-            ? Math.max(...updatedMessages.map((m) => m.id))
-            : 0) + 1,
-        content: responseContent,
-        sender: "other",
-        timestamp: responseTimeString,
-      };
-
-      const updatedChatWithResponse = {
-        ...chat,
-        messages: [...updatedMessages, responseMessage],
-      };
-
-      setChat(updatedChatWithResponse);
-      if (onChatUpdate) {
-        onChatUpdate(updatedChatWithResponse);
-      }
-    }, 1000);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -286,7 +234,7 @@ export default function ChatWindow({
     });
 
     // Create a new message with the collaboration request
-    const collabMessage: Message = {
+    const collabMessage: ChatMessage = {
       id:
         (chat.messages.length > 0
           ? Math.max(...chat.messages.map((m) => m.id))
@@ -426,7 +374,7 @@ export default function ChatWindow({
       minute: "2-digit",
     });
 
-    const audioMessage: Message = {
+    const audioMessage: ChatMessage = {
       id: (chat.messages.length > 0
         ? Math.max(...chat.messages.map((m) => m.id))
         : 0) + 1,
